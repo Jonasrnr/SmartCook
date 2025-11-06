@@ -1,0 +1,63 @@
+{% extends "recipes/base.html" %} {% block title %}Freunde{% endblock %} {% block content %}
+<div class="min-h-screen bg-gradient-to-r from-cyan-300 via-violet-600 to-blue-800 flex flex-col items-center p-8">
+
+    <div class="w-full max-w-3xl bg-white p-6 rounded-xl shadow-lg">
+        <h1 class="text-2xl font-bold text-gray-800 mb-6 text-center">Meine Freunde</h1>
+
+        {% if friends %}
+        <ul class="space-y-4">
+            {% for friend in friends %}
+            <li class="flex items-center justify-between p-4 border rounded hover:bg-gray-100 transition">
+                <div class="flex items-center space-x-4">
+                    <img src="https://placehold.co/50x50" alt="{{ friend.username }}"
+                        class="w-12 h-12 rounded-full object-cover">
+                    <div>
+                        <a href="{% url 'profile_view' friend.id %}" class="text-blue-600 font-medium">
+                            {{ friend.username }}
+                        </a>
+                        <p class="text-gray-500 text-sm">{{ friend.email }}</p>
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'remove_friend' friend.id %}"
+                        class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600">Entfernen</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-gray-600">Du hast noch keine Freunde.</p>
+        {% endif %}
+
+        <h2 class="text-xl font-semibold mt-6 mb-4">Freunde hinzufügen</h2>
+        {% if potential_friends %}
+        <ul class="space-y-2">
+            {% for user in potential_friends %}
+            <li class="flex items-center justify-between p-2 border rounded hover:bg-gray-100 transition">
+                <div class="flex items-center space-x-4">
+                    <img src="https://placehold.co/50x50" alt="{{ user.username }}"
+                        class="w-12 h-12 rounded-full object-cover">
+                    <div>
+                        <p class="font-medium text-gray-800">{{ user.username }}</p>
+                        <p class="text-gray-500 text-sm">{{ user.email }}</p>
+                    </div>
+                </div>
+                <div>
+                    <a href="{% url 'add_friend' user.id %}"
+                        class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600">Hinzufügen</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="text-center text-gray-600">Keine weiteren Nutzer zum Hinzufügen.</p>
+        {% endif %}
+
+        <div class="mt-6 text-center">
+            <a href="{% url 'landing_page' %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800">Zurück
+                zur Startseite</a>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

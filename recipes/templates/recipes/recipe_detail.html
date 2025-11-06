@@ -1,0 +1,66 @@
+{% extends "recipes/base.html" %} {% block title %}{{ recipe.title }}{% endblock %} {% block content %}
+<div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
+
+    <!-- Recipe Header: Title, Description, Image, Buttons-->
+    <div class="flex flex-col sm:flex-row items-start bg-white rounded-xl shadow-md p-4 gap-6">
+        <div class="flex flex-col gap-4">
+            <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+                <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md">
+            </a>
+            <div class="flex gap-2">
+                <a href="{% url 'recipe_edit' recipe.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg">Bearbeiten</a>
+                <form method="post" action="{% url 'recipe_delete' recipe.id %}" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Löschen</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-800">{{ recipe.title }}</h1>
+            <p class="text-gray-500 mt-2">{{ recipe.description }}</p>
+        </div>
+    </div>
+
+    <!-- Recipe Details: Prep Time, Cook Time, Servings -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center py-2">
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Prep Time</h3>
+            <p>{{ recipe.prep_time|default:"N/A" }}</p>
+        </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Cook Time</h3>
+            <p>{{ recipe.cook_time|default:"N/A" }}</p>
+        </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Servings</h3>
+            <p>{{ recipe.servings|default:"N/A" }}</p>
+        </div>
+    </div>
+
+    <!-- Ingredients and Instructions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+            <h2 class="text-2xl font-semibold mb-4">Ingredients</h2>
+            <ul class="list-disc list-inside space-y-2">
+                {% for ingredient in ingredients %}
+                <li>{{ ingredient.quantity|default:"" }} {{ ingredient.unit|default:"" }} {{ ingredient.name }}</li>
+                {% empty %}
+                <li>No ingredients listed.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div>
+            <h2 class="text-2xl font-semibold mb-4">Instructions</h2>
+            <ol class="list-decimal list-inside space-y-3">
+                {% for instruction in instructions %}
+                <li>{{ instruction.description }}</li>
+                {% empty %}
+                <li>No instructions provided.</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
