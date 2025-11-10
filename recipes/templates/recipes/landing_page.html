@@ -1,18 +1,19 @@
-{% extends "recipes/base.html" %} {% block title %}My Recipes{% endblock %} {% block content %}
+{% extends "recipes/base.html" %} {% load static %} {% block title %}My Recipes{% endblock %} {% block content %}
 <div>
     <div class="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
 
         <!-- Add Recipe Form -->
-        <div
-            class="max-w-2xl mx-auto bg-gradient-to-r border border-black from-indigo-300 p-6 rounded-xl mb-8 shadow-lg">
+        <div class="max-w-2xl mx-auto bg-gradient-to-r border border-black from-indigo-300 p-6 rounded-xl mb-8 shadow-lg">
             <h3 class="text-2xl font-bold text-center text-gray-800">Add Recipe from TikTok</h3>
             <form method="post" action="{% url 'recipe_input' %}" id="tiktok-form">
                 {% csrf_token %}
                 <div class="mt-4">
-                    <div>
-                        <input type="text" placeholder="TikTok-Link hier einfügen..." name="tiktok_link"
-                            class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600"
-                            required id="tiktok-link-input">
+                    <div class="flex gap-2">
+
+                        <input type="text" placeholder="TikTok-Link hier einfügen..." name="tiktok_link" class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" required id="tiktok-link-input">
+                        <button id="paste-tiktok-btn" type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200">
+                    Link einfügen
+                </button>
                     </div>
                 </div>
             </form>
@@ -29,21 +30,16 @@
                     {% for recipe in recipes|dictsortreversed:"id" %}
                     <div class="w-64 flex-shrink-0">
                         <!-- Recipe Card -->
-                        <div
-                            class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
+                        <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
                             <div class="relative h-40 overflow-hidden">
                                 {% if recipe.url %}
                                 <a href="{% url 'recipe_detail' recipe.id %}" class="block h-full">
-                                    <img src="{{ recipe.thumbnail|default:'https://placehold.co/600x400/2563EB/ffffff?text=Rezept+Bild' }}"
-                                        alt="{{ recipe.title }}"
-                                        class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out">
+                                    <img src="{{ recipe.thumbnail|default:'https://placehold.co/600x400/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out">
                                 </a>
                                 {% endif %}
-                                <div
-                                    class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none">
+                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none">
                                 </div>
-                                <div
-                                    class="absolute bottom-2 left-3 text-white text-sm font-medium backdrop-blur-sm bg-black/40 px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none">
+                                <div class="absolute bottom-2 left-3 text-white text-sm font-medium backdrop-blur-sm bg-black/40 px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none">
                                     ⏰ <span>{{ recipe.prep_time|default:"-" }}</span>
                                 </div>
                             </div>
@@ -52,8 +48,7 @@
                             <div class="p-4 flex flex-col justify-between h-56">
                                 <div>
                                     <h3 class="text-lg font-semibold transition group-hover:text-indigo-600">
-                                        <a href="{% url 'recipe_detail' recipe.id %}"
-                                            class="text-gray-900 hover:text-indigo-600">
+                                        <a href="{% url 'recipe_detail' recipe.id %}" class="text-gray-900 hover:text-indigo-600">
                                             {{ recipe.title }}
                                         </a>
                                     </h3>
@@ -73,10 +68,8 @@
                                 <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
                                     <span>👤 {{ recipe.user.username|default:"Unbekannt" }}</span>
                                     <div class="flex space-x-2">
-                                        <a href="{% url 'recipe_edit' recipe.id %}" title="Bearbeiten"
-                                            class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2"
-                                                viewBox="0 0 24 24">
+                                        <a href="{% url 'recipe_edit' recipe.id %}" title="Bearbeiten" class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
                                             </svg>
@@ -102,4 +95,6 @@
     }
 </style>
 
+{% endblock %} {% block scripts %}
+<script src="{% static 'js/landing_page.js' %}"></script>
 {% endblock %}

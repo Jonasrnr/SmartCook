@@ -9,62 +9,43 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 
-from .models import Recipe, Ingredient, Instruction
+from .models import Recipe, Ingredient, Instruction, Friend
 from services.RecipeExtractor import RecipeExtractor
 from services.getTikTokDesc import getTikTokDesc
-from .forms import RecipeForm, IngredientFormSet, InstructionFormSet
+from .forms import (
+    RecipeForm,
+    IngredientFormSet,
+    InstructionFormSet,
+    UserSignupForm,
+    UserLoginForm,
+)
 
 
 def signup_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        email = request.POST.get("email")
-        password1 = request.POST.get("password1")
-        password2 = request.POST.get("password2")
-
-        if not username or not email or not password1 or not password2:
-            messages.error(request, "Alle Felder müssen ausgefüllt werden.")
-            return render(request, "recipes/signup.html")
-
-        if password1 != password2:
-            messages.error(request, "Passwörter stimmen nicht überein.")
-            return render(request, "recipes/signup.html")
-
-        if User.objects.filter(username=username).exists():
-            messages.error(request, "Benutzername existiert bereits.")
-            return render(request, "recipes/signup.html")
-
-        if User.objects.filter(email=email).exists():
-            messages.error(request, "Email existiert bereits.")
-            return render(request, "recipes/signup.html")
-
-        user = User.objects.create_user(
-            username=username, email=email, password=password1
-        )
-        Friend.objects.create(user=user)
-        user.save()
-
-        messages.success(
-            request, "Account erfolgreich erstellt! Du kannst dich jetzt einloggen."
-        )
-        return redirect("login")
-
-    return render(request, "recipes/signup.html")
+        form = UserSignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            Friend.objects.create(user=user)
+            messages.success(
+                request, "Account erfolgreich erstellt! Du kannst dich jetzt einloggen."
+            )
+            return redirect("login")
+    else:
+        form = UserSignupForm()
+    return render(request, "recipes/signup.html", {"form": form})
 
 
 def login_view(request):
     if request.method == "POST":
-        username = request.POST.get("username")
-        password = request.POST.get("password")
-
-        user = authenticate(request, username=username, password=password)
-        if user is not None:
+        form = UserLoginForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
             login(request, user)
             return redirect("landing_page")
-        else:
-            messages.error(request, "Benutzername oder Passwort ist falsch.")
-
-    return render(request, "recipes/login.html")
+    else:
+        form = UserLoginForm()
+    return render(request, "recipes/login.html", {"form": form})
 
 
 def logout_view(request):
@@ -82,6 +63,7 @@ def recipe_input(request):
 
                 extractor = RecipeExtractor(api_key=settings.LANGEXTRACT_API_KEY)
                 annotated_doc = extractor.extract_recipe(description)
+                print("annotated_doc:", annotated_doc)
 
                 if annotated_doc and annotated_doc.extractions:
                     recipe_dict = None
@@ -114,10 +96,11 @@ def recipe_input(request):
                 else:
                     message = "Fehler: Recipe konnte nicht extrahiert werden."
 
+            # TODO: Error Messages
             except Exception as e:
                 message = f"Fehler: {e}"
-        return render(request, "recipes/form.html", {"message": message})
-    return render(request, "recipes/form.html")
+        return render(request, "recipes/landing_page.html", {"message": message})
+    return render(request, "recipes/landing_page.html")
 
 
 @login_required

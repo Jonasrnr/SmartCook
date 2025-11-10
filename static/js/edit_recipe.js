@@ -124,6 +124,13 @@ window.domReadyQueue.push(() => {
     setInitialStepEmojis();
 
     // "Hinzufügen"-Buttons
-    document.getElementById("add-ingredient-btn") ? .addEventListener("click", () => addNewItem('ingredient'));
-    document.getElementById("add-instruction-btn") ? .addEventListener("click", () => addNewItem('instruction'));
+    const addIngredientBtn = document.getElementById("add-ingredient-btn");
+    if (addIngredientBtn) {
+        addIngredientBtn.addEventListener("click", () => addNewItem('ingredient'));
+    }
+
+    const addInstructionBtn = document.getElementById("add-instruction-btn");
+    if (addInstructionBtn) {
+        addInstructionBtn.addEventListener("click", () => addNewItem('instruction'));
+    }
 });

@@ -1,42 +1,38 @@
 from django import forms
-from django.forms import inlineformset_factory
+from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from django.contrib.auth.models import User
+
 from .models import Recipe, Ingredient, Instruction
+
+
+class UserSignupForm(UserCreationForm):
+    email = forms.EmailField(required=True)
+
+    class Meta(UserCreationForm.Meta):
+        model = User
+        fields = ("username", "email")
+
+    def clean_email(self):
+        email = self.cleaned_data.get("email")
+        if User.objects.filter(email=email).exists():
+            raise forms.ValidationError("Diese E-Mail-Adresse wird bereits verwendet.")
+        return email
+
+
+class UserLoginForm(AuthenticationForm):
+    def __init__(self, *args, **kwargs):
+        super(UserLoginForm, self).__init__(*args, **kwargs)
 
 
 class RecipeForm(forms.ModelForm):
     class Meta:
         model = Recipe
-        fields = ["title", "description", "prep_time", "cook_time", "servings"]
-        widgets = {
-            "description": forms.Textarea(attrs={"rows": 3}),
-        }
+        fields = "__all__"
 
 
-class IngredientForm(forms.ModelForm):
-    class Meta:
-        model = Ingredient
-        fields = ["name", "quantity", "unit"]
-
-
-IngredientFormSet = inlineformset_factory(
-    Recipe,
-    Ingredient,
-    form=IngredientForm,
-    extra=0,
-    can_delete=True,
+IngredientFormSet = forms.inlineformset_factory(
+    Recipe, Ingredient, fields=("name", "quantity", "unit"), extra=0
 )
-
-
-class InstructionForm(forms.ModelForm):
-    class Meta:
-        model = Instruction
-        fields = ["description"]
-
-
-InstructionFormSet = inlineformset_factory(
-    Recipe,
-    Instruction,
-    form=InstructionForm,
-    extra=0,
-    can_delete=True,
+InstructionFormSet = forms.inlineformset_factory(
+    Recipe, Instruction, fields=("description",), extra=0
 )

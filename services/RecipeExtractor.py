@@ -8,7 +8,6 @@ class RecipeExtractor:
         self.api_key = api_key
         self.model = model
 
-        # Beispiele aus JSON laden
         with open("services/prompt/examples.json", "r", encoding="utf-8") as f:
             raw_examples = json.load(f)
 
@@ -23,12 +22,10 @@ class RecipeExtractor:
             ]
             self.examples.append(ExampleData(text=ex["text"], extractions=extractions))
 
-        # Prompt laden
         with open("services/prompt/prompt.txt", "r", encoding="utf-8") as f:
             self.prompt = f.read()
 
     def extract_recipe(self, text: str):
-        # Perform extraction
         result = lx.extract(
             text_or_documents=text,
             prompt_description=self.prompt,
