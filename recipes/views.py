@@ -9,12 +9,14 @@ from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 import json
 
-from .models import Recipe, Ingredient, Instruction, Friend
+from .models import Recipe, Ingredient, Instruction, Friend, Collection
 from services.RecipeExtractor import RecipeExtractor
 from services.getTikTokDesc import getTikTokDesc
+from services.searchRecipes import searchRecipes
 from .forms import (
     RecipeForm,
     IngredientFormSet,
+    CollectionForm,
     InstructionFormSet,
     UserSignupForm,
     UserLoginForm,
@@ -124,7 +126,6 @@ def profile_view(request, user_id=None):
 
 @login_required
 def landing_page(request):
-    print(request.user)
     recipes = Recipe.objects.filter(user=request.user).order_by("-id")
     return render(request, "recipes/landing_page.html", {"recipes": recipes})
 
@@ -132,6 +133,8 @@ def landing_page(request):
 @login_required
 def recipe_detail(request, recipe_id):
     recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+    user_collections = Collection.objects.filter(user=request.user)
+    collections_with_recipe = list(user_collections.filter(recipes=recipe).values_list('id', flat=True))
 
     ingredients = recipe.ingredients.all()
     instructions = recipe.instruction_steps.all()
@@ -140,6 +143,8 @@ def recipe_detail(request, recipe_id):
         "recipe": recipe,
         "ingredients": ingredients,
         "instructions": instructions,
+        "collections": user_collections,
+        "collections_with_recipe": collections_with_recipe,
     }
     return render(request, "recipes/recipe_detail.html", context)
 
@@ -310,8 +315,109 @@ def add_friend(request, friend_id):
 
 
 @login_required
+def collections_view(request):
+    if request.method == "POST":
+        form = CollectionForm(request.POST)
+        if form.is_valid():
+            collection = form.save(commit=False)
+            collection.user = request.user
+            collection.save()
+            messages.success(request, f"Sammlung '{collection.name}' wurde erstellt.")
+            return redirect("collections")
+    else:
+        form = CollectionForm()
+
+    collections = Collection.objects.filter(user=request.user).order_by("-id")
+    context = {
+        "form": form,
+        "collections": collections,
+    }
+    return render(request, "recipes/collections.html", context)
+
+@login_required
+def collection_detail(request, collection_id):
+    collection = get_object_or_404(Collection, pk=collection_id, user=request.user)
+    recipes = collection.recipes.all()
+
+    context = {
+        "collection": collection,
+        "recipes": recipes,
+    }
+    return render(request, "recipes/collection_detail.html", context)
+
+@login_required
 def remove_friend(request, friend_id):
     friend_profile = request.user.friend_profile
     friend_to_remove = get_object_or_404(User, id=friend_id)
     friend_profile.friends.remove(friend_to_remove)
     return redirect("friends")
+
+
+@login_required
+@require_POST
+def refresh_thumbnail(request, recipe_id):
+    print("test")
+    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+    if not recipe.url:
+        return JsonResponse({"status": "error", "message": "No TikTok URL for this recipe."}, status=400)
+
+    try:
+        _, new_thumbnail_url = getTikTokDesc(recipe.url)
+        if new_thumbnail_url:
+            recipe.thumbnail = new_thumbnail_url
+            recipe.save(update_fields=['thumbnail'])
+            return JsonResponse({"status": "ok", "thumbnail_url": new_thumbnail_url})
+        else:
+            return JsonResponse({"status": "error", "message": "Could not retrieve new thumbnail."}, status=400)
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+
+@login_required
+@require_POST
+def add_recipe_to_collection(request):
+    try:
+        data = json.loads(request.body)
+        recipe_id = data.get("recipe_id")
+        collection_id = data.get("collection_id")
+
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+        collection = get_object_or_404(Collection, pk=collection_id, user=request.user)
+
+        if recipe in collection.recipes.all():
+            return JsonResponse({"status": "info", "message": "Rezept ist bereits in dieser Sammlung."})
+
+        collection.recipes.add(recipe)
+        return JsonResponse({"status": "ok", "message": f"Rezept zu '{collection.name}' hinzugefügt."})
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+@login_required
+@require_POST
+def remove_recipe_from_collection(request):
+    try:
+        data = json.loads(request.body)
+        recipe_id = data.get("recipe_id")
+        collection_id = data.get("collection_id")
+
+        recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+        collection = get_object_or_404(Collection, pk=collection_id, user=request.user)
+
+        collection.recipes.remove(recipe)
+        return JsonResponse({"status": "ok", "message": f"Rezept aus '{collection.name}' entfernt."})
+
+    except Exception as e:
+        return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+@login_required
+def search_view(request):
+    query = request.GET.get("q", "").strip()
+    results = []
+    recipes = Recipe.objects.filter(user=request.user)
+    if query:
+        results = searchRecipes(query, recipes)
+        recipes = [recipe for recipe, score in results]
+        print(recipes)
+    return render(request, "recipes/search.html", {"query": query, "recipes": recipes})

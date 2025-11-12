@@ -27,60 +27,7 @@
             <h2 class="text-2xl font-semibold mb-4 px-2">Rezepte</h2>
             <div class="max-w-5xl mx-auto overflow-x-auto hide-scroll-bar py-2">
                 <div class="flex flex-nowrap gap-6 px-4">
-                    {% for recipe in recipes|dictsortreversed:"id" %}
-                    <div class="w-64 flex-shrink-0">
-                        <!-- Recipe Card -->
-                        <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
-                            <div class="relative h-40 overflow-hidden">
-                                {% if recipe.url %}
-                                <a href="{% url 'recipe_detail' recipe.id %}" class="block h-full">
-                                    <img src="{{ recipe.thumbnail|default:'https://placehold.co/600x400/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out">
-                                </a>
-                                {% endif %}
-                                <div class="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent pointer-events-none">
-                                </div>
-                                <div class="absolute bottom-2 left-3 text-white text-sm font-medium backdrop-blur-sm bg-black/40 px-2 py-1 rounded-md flex items-center gap-1 pointer-events-none">
-                                    ⏰ <span>{{ recipe.prep_time|default:"-" }}</span>
-                                </div>
-                            </div>
-
-
-                            <div class="p-4 flex flex-col justify-between h-56">
-                                <div>
-                                    <h3 class="text-lg font-semibold transition group-hover:text-indigo-600">
-                                        <a href="{% url 'recipe_detail' recipe.id %}" class="text-gray-900 hover:text-indigo-600">
-                                            {{ recipe.title }}
-                                        </a>
-                                    </h3>
-
-                                    {% if recipe.servings %}
-                                    <p class="text-sm text-gray-500 mt-1">
-                                        👨‍🍳 {{ recipe.servings }} Portionen
-                                    </p>
-                                    {% endif %}
-
-                                    <p class="mt-2 text-gray-600 text-sm line-clamp-3">
-                                        {{ recipe.description|truncatewords:20 }}
-                                    </p>
-                                </div>
-
-
-                                <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-                                    <span>👤 {{ recipe.user.username|default:"Unbekannt" }}</span>
-                                    <div class="flex space-x-2">
-                                        <a href="{% url 'recipe_edit' recipe.id %}" title="Bearbeiten" class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                                            </svg>
-                                        </a>
-                                    </div>
-                                </div>
-                            </div>
-
-                        </div>
-                    </div>
-                    {% endfor %}
+                    {% for recipe in recipes|dictsortreversed:"id" %} {% include "recipes/recipe_card.html" with recipe=recipe %} {% endfor %}
                 </div>
             </div>
         </div>

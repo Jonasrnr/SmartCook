@@ -5,7 +5,7 @@
     <!-- Recipe Header with image -->
     <div class="flex flex-col sm:flex-row items-center bg-white rounded-xl shadow-md p-4 gap-6">
         <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer">
-            <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md">
+            <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {{ recipe.id }})">
         </a>
         <div class="flex-1">
             <h1 class="text-3xl font-bold text-gray-800">{{ recipe.title }}</h1>

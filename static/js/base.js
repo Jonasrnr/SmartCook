@@ -90,3 +90,29 @@ window.addEventListener('load', () => {
     }, 500);
     content.classList.remove('opacity-0');
 });
+
+function handleImageError(imageElement, recipeId) {
+    // ChatGPT
+    imageElement.onerror = () => {}; // Verhindert Endlosschleifen und Konsolenfehler
+
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+    if (!csrfToken) {
+        console.error("CSRF token not found.");
+        return;
+    }
+
+    fetch(`/recipe/refresh_thumbnail/${recipeId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': csrfToken,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.status === 'ok' && data.thumbnail_url) {
+                imageElement.src = data.thumbnail_url;
+            }
+        })
+        .catch(error => console.error('Error refreshing thumbnail:', error));
+}

@@ -2,7 +2,7 @@ from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth.models import User
 
-from .models import Recipe, Ingredient, Instruction
+from .models import Recipe, Ingredient, Instruction, Collection
 
 
 class UserSignupForm(UserCreationForm):
@@ -36,3 +36,11 @@ IngredientFormSet = forms.inlineformset_factory(
 InstructionFormSet = forms.inlineformset_factory(
     Recipe, Instruction, fields=("description",), extra=0
 )
+class CollectionForm(forms.ModelForm):
+    class Meta:
+        model = Collection
+        fields = ['name', 'description']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600', 'placeholder': 'Name der Sammlung'}),
+            'description': forms.Textarea(attrs={'class': 'flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600', 'placeholder': 'Beschreibung (optional)', 'rows': 3}),
+        }

@@ -5,8 +5,7 @@ def getTikTokDesc(url: str) -> str:
 
     r = requests.get(api_url)
 
-    data = r.json()
-    print(data)
+    data = r.json() 
     recipe_text = data.get("title", "")
     thumbnail = data.get("thumbnail_url", "")
 

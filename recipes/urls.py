@@ -28,4 +28,22 @@ urlpatterns = [
     path("friends/", views.friends_view, name="friends"),
     path("friends/add/<int:friend_id>/", views.add_friend, name="add_friend"),
     path("friends/remove/<int:friend_id>/", views.remove_friend, name="remove_friend"),
+    path('collections/', views.collections_view, name='collections'),
+    path('recipe/refresh_thumbnail/<int:recipe_id>/', views.refresh_thumbnail, name='refresh_thumbnail'),
+    path(
+        "collection/add_recipe/",
+        views.add_recipe_to_collection,
+        name="add_recipe_to_collection",
+    ),
+    path(
+        "collection/remove_recipe/",
+        views.remove_recipe_from_collection,
+        name="remove_recipe_from_collection",
+    ),
+    path(
+        "collection/<int:collection_id>/",
+        views.collection_detail,
+        name="collection_detail",
+    ),
+    path("search/", views.search_view, name="search"),
 ]
