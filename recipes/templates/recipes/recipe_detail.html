@@ -73,7 +73,7 @@
             <h3 class="text-xl font-bold mb-4">Zu Sammlung hinzufügen</h3>
             <div id="collection-list" class="space-y-2">
                 {% for collection in collections %} {% if collection.id in collections_with_recipe %}
-                <button data-collection-id="{{ collection.id }}" data-action="remove" class="collection-toggle-item w-full text-left p-3 bg-green-100 text-green-800 rounded-lg flex justify-between items-center hover:bg-red-100 transition">
+                <button data-collection-id="{{ collection.id }}" data-action="remove" class="collection-toggle-item w-full text-left p-3 bg-green-100 text-green-800 rounded-lg flex justify-between items-center hover:bg-blue-100 transition">
                     <span>{{ collection.name }}</span>
                     <span class="text-green-600 font-bold">✓</span>
                 </button> {% else %}
