@@ -36,7 +36,10 @@
 
 
             <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
-                <span>👤 {{ recipe.user.username|default:"Unbekannt" }}</span>
+                <div class="flex items-center gap-1">
+                    {% if recipe.original_creator %}
+                    <span class="text-xs text-gray-400">{{ recipe.original_creator.username }}</span> {% endif %}
+                </div>
                 <div class="flex space-x-2">
                     <a href="{% url 'recipe_edit' recipe.id %}" title="Bearbeiten" class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">

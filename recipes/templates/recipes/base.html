@@ -22,8 +22,9 @@
     <div class="flex">
         {% include 'recipes/sidebar.html' %} {% include 'recipes/mobile_navigation.html' %}
 
-        <div id="content-wrapper" class="absolute top-0 right-0 bottom-0 left-0 lg:left-20 transition-all duration-300 ease-in-out">
-            <main class="p-2 w-full h-full overflow-y-auto" id="main-content">
+        <!-- Main Content Wrapper -->
+        <div id="content-wrapper" class="absolute top-0 right-0 bottom-0 left-0 ml-20">
+            <main class="w-full h-full overflow-y-auto" id="main-content">
                 {% block content %}{% endblock %}
             </main>
         </div>

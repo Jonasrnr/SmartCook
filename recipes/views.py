@@ -12,6 +12,7 @@ import json
 from .models import Recipe, Ingredient, Instruction, Friend, Collection
 from services.RecipeExtractor import RecipeExtractor
 from services.getTikTokDesc import getTikTokDesc
+from services.getInstaDesc import getInstaDesc
 from services.searchRecipes import searchRecipes
 from .forms import (
     RecipeForm,
@@ -61,7 +62,12 @@ def recipe_input(request):
         link = request.POST.get("tiktok_link", "").strip()
         if link:
             try:
-                description, thumbnail = getTikTokDesc(link)
+                if "instagram.com" in link:
+                    description, thumbnail = getInstaDesc(link)
+                elif "tiktok.com" in link:
+                    description, thumbnail = getTikTokDesc(link)
+                else:
+                    raise ValueError("Nur TikTok- und Instagram-Links werden unterstützt.")
 
                 extractor = RecipeExtractor(api_key=settings.LANGEXTRACT_API_KEY)
                 annotated_doc = extractor.extract_recipe(description)
@@ -77,6 +83,7 @@ def recipe_input(request):
                     if recipe_dict:
                         recipe = Recipe.objects.create(
                             user=request.user,
+                            original_creator=request.user,
                             title=recipe_dict.get("title", ""),
                             description=recipe_dict.get("description", ""),
                             prep_time=recipe_dict.get("prep_time", ""),
@@ -89,7 +96,7 @@ def recipe_input(request):
                             Ingredient.objects.create(recipe=recipe, **ing)
                         for i, desc in enumerate(recipe_dict.get("instructions", [])):
                             Instruction.objects.create(
-                                recipe=recipe, step_number=i + 1, description=desc
+                                recipe=recipe, step_number=i + 1, description=desc.strip()
                             )
                         return redirect("landing_page")
                     else:
@@ -132,7 +139,13 @@ def landing_page(request):
 
 @login_required
 def recipe_detail(request, recipe_id):
-    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
+
+    is_own_recipe = recipe.user == request.user
+    is_friend_recipe = request.user.friend_profile.friends.filter(id=recipe.user.id).exists()
+
+    if not (is_own_recipe or is_friend_recipe):
+        return redirect("landing_page")
     user_collections = Collection.objects.filter(user=request.user)
     collections_with_recipe = list(user_collections.filter(recipes=recipe).values_list('id', flat=True))
 
@@ -167,6 +180,30 @@ def recipe_edit(request, recipe_id):
 
 
 @require_POST
+@login_required
+def update_recipe(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            recipe_id = data.get("id")
+            field = data.get("field")
+            value = data.get("value")
+
+            recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+
+            if field in ["prep_time", "cook_time", "servings"] and value == "":
+                value = None
+
+            setattr(recipe, field, value)
+            recipe.save()
+
+            return JsonResponse({"status": "ok"})
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=400)
+
+
+@require_POST
+@login_required
 def update_ingredient(request):
     if request.method == "POST":
         try:
@@ -204,6 +241,7 @@ def update_ingredient(request):
 
 
 @require_POST
+@login_required
 def update_instruction(request):
     if request.method == "POST":
         try:
@@ -255,6 +293,7 @@ def recipe_delete(request, recipe_id):
     return redirect("landing_page")
 
 
+@login_required
 def add_ingredient(request, recipe_id):
     if request.method == "POST":
         recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
@@ -266,7 +305,7 @@ def add_ingredient(request, recipe_id):
         {"status": "error", "message": "Nur POST-Anfragen erlaubt"}, status=400
     )
 
-
+@login_required
 def add_instruction(request, recipe_id):
     if request.method == "POST":
         recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
@@ -290,6 +329,34 @@ def add_instruction(request, recipe_id):
         {"status": "error", "message": "Nur POST-Anfragen erlaubt"}, status=400
     )
 
+
+@login_required
+def add_recipe_from_friend(request, recipe_id):
+    original_recipe = get_object_or_404(Recipe, pk=recipe_id)
+
+    if original_recipe.user == request.user:
+        messages.info(request, "Du kannst deine eigenen Rezepte nicht kopieren.")
+        return redirect("recipe_detail", recipe_id=original_recipe.id)
+
+    new_recipe = Recipe.objects.create(
+        user=request.user,
+        original_creator=original_recipe.user,
+        title=original_recipe.title,
+        description=original_recipe.description,
+        prep_time=original_recipe.prep_time,
+        cook_time=original_recipe.cook_time,
+        servings=original_recipe.servings,
+        thumbnail=original_recipe.thumbnail,
+        url=original_recipe.url,
+    )
+
+    for ing in original_recipe.ingredients.all():
+        Ingredient.objects.create(recipe=new_recipe, name=ing.name, quantity=ing.quantity, unit=ing.unit)
+
+    for instr in original_recipe.instruction_steps.all():
+        Instruction.objects.create(recipe=new_recipe, step_number=instr.step_number, description=instr.description)
+
+    return redirect("recipe_detail", recipe_id=new_recipe.id)
 
 @login_required
 def friends_view(request):

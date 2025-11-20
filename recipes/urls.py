@@ -12,6 +12,7 @@ urlpatterns = [
     path("recipe/<int:recipe_id>/edit/", views.recipe_edit, name="recipe_edit"),
     path("recipe/<int:recipe_id>/delete/", views.recipe_delete, name="recipe_delete"),
     path("update_ingredient/", views.update_ingredient, name="update_ingredient"),
+    path("update_recipe/", views.update_recipe, name="update_recipe"),
     path("update_instruction/", views.update_instruction, name="update_instruction"),
     path(
         "add_ingredient/<int:recipe_id>/",
@@ -39,6 +40,11 @@ urlpatterns = [
         "collection/remove_recipe/",
         views.remove_recipe_from_collection,
         name="remove_recipe_from_collection",
+    ),
+    path(
+        "recipe/add_from_friend/<int:recipe_id>/",
+        views.add_recipe_from_friend,
+        name="add_recipe_from_friend",
     ),
     path(
         "collection/<int:collection_id>/",

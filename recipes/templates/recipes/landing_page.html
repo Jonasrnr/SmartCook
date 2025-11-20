@@ -1,34 +1,32 @@
 {% extends "recipes/base.html" %} {% load static %} {% block title %}My Recipes{% endblock %} {% block content %}
-<div>
-    <div class="max-w-[85rem] px-4 sm:px-6 lg:px-8 mx-auto">
+<div class="max-w-[85rem] mx-auto py-2">
 
-        <!-- Add Recipe Form -->
-        <div class="max-w-2xl mx-auto bg-gradient-to-r border border-black from-indigo-300 p-6 rounded-xl mb-8 shadow-lg">
-            <h3 class="text-2xl font-bold text-center text-gray-800">Add Recipe from TikTok</h3>
-            <form method="post" action="{% url 'recipe_input' %}" id="tiktok-form">
-                {% csrf_token %}
-                <div class="mt-4">
-                    <div class="flex gap-2">
+    <!-- Add Recipe Form -->
+    <div class="max-w-2xl mx-auto bg-gradient-to-r border border-black from-indigo-300 p-6 rounded-xl mb-8 shadow-lg">
+        <h3 class="text-2xl font-bold text-center text-gray-800">Add Recipe from TikTok</h3>
+        <form method="post" action="{% url 'recipe_input' %}" id="tiktok-form">
+            {% csrf_token %}
+            <div class="mt-4">
+                <div class="flex gap-2">
 
-                        <input type="text" placeholder="TikTok-Link hier einfügen..." name="tiktok_link" class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" required id="tiktok-link-input">
-                        <button id="paste-tiktok-btn" type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200">
+                    <input type="text" placeholder="TikTok-Link hier einfügen..." name="tiktok_link" class="flex-grow px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-600" required id="tiktok-link-input">
+                    <button id="paste-tiktok-btn" type="button" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded transition duration-200">
                     Link einfügen
                 </button>
-                    </div>
                 </div>
-            </form>
-            {% if message %}
-            <div class="mt-4 text-red-600 text-center">{{ message }}</div>
-            {% endif %}
-        </div>
+            </div>
+        </form>
+        {% if message %}
+        <div class="mt-4 text-red-600 text-center">{{ message }}</div>
+        {% endif %}
+    </div>
 
-        <!-- Horizontal Scroller -->
-        <div class="mt-8">
-            <h2 class="text-2xl font-semibold mb-4 px-2">Rezepte</h2>
-            <div class="max-w-5xl mx-auto overflow-x-auto hide-scroll-bar py-2">
-                <div class="flex flex-nowrap gap-6 px-4">
-                    {% for recipe in recipes|dictsortreversed:"id" %} {% include "recipes/recipe_card.html" with recipe=recipe %} {% endfor %}
-                </div>
+    <!-- Horizontal Scroller -->
+    <div class="mx-auto px-4">
+        <h2 class="text-2xl font-semibold mb-4 px-2">Rezepte</h2>
+        <div class="w-full mx-auto overflow-x-auto hide-scroll-bar py-2">
+            <div class="flex flex-nowrap gap-6">
+                {% for recipe in recipes|dictsortreversed:"id" %} {% include "recipes/recipe_card.html" with recipe=recipe %} {% endfor %}
             </div>
         </div>
     </div>

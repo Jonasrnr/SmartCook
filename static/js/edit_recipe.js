@@ -1,11 +1,8 @@
-// Wir fügen unsere Initialisierungslogik zur globalen Warteschlange hinzu,
-// die in base.html ausgeführt wird.
 window.domReadyQueue.push(() => {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
     const recipeId = JSON.parse(document.getElementById('recipe-id').textContent);
 
     // --- HILFSFUNKTIONEN ---
-
     function getStepEmoji(number) {
         const emojis = ["1️⃣", "2️⃣", "3️⃣", "4️⃣", "5️⃣", "6️⃣", "7️⃣", "8️⃣", "9️⃣"];
         return (number > 0 && number <= emojis.length) ? emojis[number - 1] : "🔹";
@@ -30,7 +27,21 @@ window.domReadyQueue.push(() => {
 
         if (!id || !field || !type) return;
 
-        const url = type === "ingredient" ? `/update_ingredient/` : `/update_instruction/`;
+        let url;
+        switch (type) {
+            case "recipe":
+                url = `/update_recipe/`;
+                break;
+            case "ingredient":
+                url = `/update_ingredient/`;
+                break;
+            case "instruction":
+                url = `/update_instruction/`;
+                break;
+            default:
+                console.error("Unbekannter Auto-Save-Typ:", type);
+                return;
+        }
 
         try {
             const response = await fetch(url, {
@@ -47,8 +58,7 @@ window.domReadyQueue.push(() => {
                 const elementToRemove = el.closest(`[data-${type}-id="${data.id}"]`);
                 if (elementToRemove) elementToRemove.remove();
                 if (data.renumber) {
-                    // Seite neu laden, um die Nummern zu aktualisieren.
-                    // Eine Alternative wäre, die Nummern im Frontend neu zu rendern.
+
                     location.reload();
                 }
             } else {
@@ -84,7 +94,7 @@ window.domReadyQueue.push(() => {
                     list.appendChild(newLi);
                     newLi.querySelectorAll(".auto-save-input").forEach(input => input.addEventListener("change", handleAutoSave));
                     newLi.querySelector('input').focus();
-                } else { // instruction
+                } else {
                     const list = document.getElementById("instruction-list");
                     const newDiv = document.createElement("div");
                     newDiv.className = "bg-white p-3 flex gap-2 items-start";

@@ -1,5 +1,5 @@
 {% extends "recipes/base.html" %} {% block title %}{{ recipe.title }}{% endblock %} {% block content %}
-<div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md">
+<div class="max-w-5xl mx-auto p-6">
 
     <!-- Recipe Header: Title, Description, Image, Buttons-->
     <div class="flex flex-col sm:flex-row items-start bg-white rounded-xl shadow-md p-4 gap-6">
@@ -8,15 +8,20 @@
                 <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {{ recipe.id }})">
             </a>
             <div class="flex gap-2">
+                {% if recipe.user == request.user %}
                 <a href="{% url 'recipe_edit' recipe.id %}" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg">Bearbeiten</a>
                 <button id="add-to-collection-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                    + Sammlung
-                </button>
+                        + Sammlung
+                    </button>
                 <form method="post" action="{% url 'recipe_delete' recipe.id %}" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');">
                     {% csrf_token %}
                     <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Löschen
-                    </button>
+                        </button>
                 </form>
+                {% else %}
+                <a href="{% url 'add_recipe_from_friend' recipe.id %}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
+                        Zu meinen Rezepten hinzufügen
+                    </a> {% endif %}
             </div>
         </div>
 
@@ -44,9 +49,9 @@
 
     <!-- Ingredients and Instructions -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div>
-            <h2 class="text-2xl font-semibold mb-4">Ingredients</h2>
-            <ul class="list-disc list-inside space-y-2">
+        <div class="bg-white rounded-md">
+            <h2 class="text-2xl font-semibold mb-4 px-2">Ingredients</h2>
+            <ul class="list-disc list-inside space-y-2 px-4">
                 {% for ingredient in ingredients %}
                 <li>{{ ingredient.quantity|default:"" }} {{ ingredient.unit|default:"" }} {{ ingredient.name }}</li>
                 {% empty %}
@@ -54,9 +59,9 @@
                 {% endfor %}
             </ul>
         </div>
-        <div>
-            <h2 class="text-2xl font-semibold mb-4">Instructions</h2>
-            <ol class="list-decimal list-inside space-y-3">
+        <div class="bg-white rounded-md">
+            <h2 class="text-2xl font-semibold mb-4 px-2">Instructions</h2>
+            <ol class="list-decimal list-inside space-y-3 px-4">
                 {% for instruction in instructions %}
                 <li>{{ instruction.description }}</li>
                 {% empty %}

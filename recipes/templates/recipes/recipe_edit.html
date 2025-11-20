@@ -8,9 +8,16 @@
             <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {{ recipe.id }})">
         </a>
         <div class="flex-1">
-            <h1 class="text-3xl font-bold text-gray-800">{{ recipe.title }}</h1>
-            <p class="text-gray-500 mt-2">{{ recipe.description }}</p>
-            <p class="text-gray-500 mt-1 text-sm">Vorbereitung: {{ recipe.prep_time }} | Kochzeit: {{ recipe.cook_time }} | Portionen: {{ recipe.servings }}</p>
+            <input type="text" value="{{ recipe.title }}" data-id="{{ recipe.id }}" data-field="title" data-type="recipe" class="auto-save-input text-3xl font-bold text-gray-800 w-full border rounded px-2 py-1" placeholder="Titel">
+            <textarea data-id="{{ recipe.id }}" data-field="description" data-type="recipe" class="auto-save-input text-gray-500 mt-2 w-full border rounded px-2 py-1" placeholder="Beschreibung">{{ recipe.description|default_if_none:'' }}</textarea>
+            <div class="text-gray-500 mt-1 text-sm flex items-center gap-2">
+                <span>Vorbereitung:</span>
+                <input type="text" value="{{ recipe.prep_time|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="prep_time" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+                <span>| Kochzeit:</span>
+                <input type="text" value="{{ recipe.cook_time|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="cook_time" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+                <span>| Portionen:</span>
+                <input type="text" value="{{ recipe.servings|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="servings" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+            </div>
         </div>
     </div>
 
