@@ -1,55 +1,5 @@
-{% extends "recipes/base.html" %} {% load static %} {% block title %}Meine Sammlungen{% endblock %} {% block content %}
-<div class="max-w-4xl mx-auto p-6 space-y-6">
+{% extends "recipes/base.html" %} {% load static %} {% block title %}Meine Sammlungen{% endblock %} {% block content %} {% include "recipes/partials/collections_partial.html" %} {% endblock %} {% block scripts %}
 
-    <!-- List of Collections -->
-    <div class="max-w-4xl mx-auto p-12 space-y-12 bg-white rounded-xl shadow-lg border border-gray-200 relative">
-
-        <div class="flex justify-between items-center mb-4">
-            <h2 class="text-2xl font-bold text-gray-800">Meine Sammlungen</h2>
-            <button id="add-collection-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                + Neue Sammlung
-            </button>
-        </div>
-
-        <!-- Add Collection Modal -->
-        <div id="add-collection-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
-            <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md relative">
-                <button id="close-overlay-btn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-                <h3 class="text-xl font-bold mb-4">Neue Sammlung erstellen</h3>
-                <form method="post" action="{% url 'collections' %}">
-                    {% csrf_token %}
-                    <div class="space-y-4">
-                        {{ form.name }} {{ form.description }}
-                    </div>
-                    <button type="submit" class="mt-6 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">Speichern</button>
-                </form>
-            </div>
-        </div>
-
-        {% if collections %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {% for collection in collections %}
-            <a href="{% url 'collection_detail' collection.id %}" class="group block bg-gray-50 p-4 rounded-lg border hover:shadow-md transition">
-                <div class="grid grid-cols-2 grid-rows-2 h-32 overflow-hidden rounded-md mb-3">
-                    {% with collection_recipes=collection.recipes.all %} {% for recipe in collection_recipes|slice:":4" %}
-                    <div class="bg-gray-200">
-                        <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x300/2563EB/ffffff?text=Bild' }}" alt="{{ collection.name }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-300 ease-in-out" onerror="handleImageError(this, {{ recipe.id }})">
-                    </div>
-                    {% endfor %} {% endwith %}
-                </div>
-                <h3 class="font-semibold text-lg text-blue-700 group-hover:underline">{{ collection.name }}</h3>
-                <p class="text-gray-600 text-sm mt-1">{{ collection.description|default:"Keine Beschreibung" }}</p>
-                <p class="text-gray-500 text-xs mt-2">{{ collection.recipes.count }} Rezept(e)</p>
-            </a>
-            {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-center text-gray-600">Du hast noch keine Sammlungen erstellt.</p>
-        {% endif %}
-    </div>
-
-</div>
-{% endblock %} {% block scripts %}
 <script>
     window.domReadyQueue.push(() => {
         const addBtn = document.getElementById('add-collection-btn');

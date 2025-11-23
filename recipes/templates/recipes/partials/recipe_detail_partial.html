@@ -1,0 +1,189 @@
+<div class="max-w-5xl mx-auto p-6">
+
+    <!-- Recipe Header: Title, Description, Image, Buttons-->
+    <div class="flex flex-col sm:flex-row items-start bg-white rounded-xl shadow-md p-4 gap-6">
+        <div class="flex flex-col gap-4">
+            <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+                <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {{recipe.id}})">
+            </a>
+            <div class="flex gap-2">
+                {% if recipe.user == request.user %}
+                <a hx-get="{% url 'recipe_edit' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg">Bearbeiten</a>
+                <button id="add-to-collection-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
+                        + Sammlung
+                    </button>
+                <form method="post" action="{% url 'recipe_delete' recipe.id %}" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');">
+                    {% csrf_token %}
+                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Löschen
+                        </button>
+                </form>
+                {% else %}
+                <a href="{% url 'add_recipe_from_friend' recipe.id %}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
+                        Zu meinen Rezepten hinzufügen
+                    </a> {% endif %}
+            </div>
+        </div>
+
+        <div class="flex-1">
+            <h1 class="text-3xl font-bold text-gray-800">{{ recipe.title }}</h1>
+            <p class="text-gray-500 mt-2">{{ recipe.description }}</p>
+        </div>
+    </div>
+
+    <!-- Recipe Details: Prep Time, Cook Time, Servings -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center py-2">
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Prep Time</h3>
+            <p>{{ recipe.prep_time|default:"N/A" }}</p>
+        </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Cook Time</h3>
+            <p>{{ recipe.cook_time|default:"N/A" }}</p>
+        </div>
+        <div class="bg-blue-50 p-4 rounded-lg">
+            <h3 class="font-semibold text-gray-700">Servings</h3>
+            <p>{{ recipe.servings|default:"N/A" }}</p>
+        </div>
+    </div>
+
+    <!-- Ingredients and Instructions -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="bg-white rounded-md">
+            <h2 class="text-2xl font-semibold mb-4 px-2">Ingredients</h2>
+            <ul class="list-disc list-inside space-y-2 px-4">
+                {% for ingredient in ingredients %}
+                <li>{{ ingredient.quantity|default:"" }} {{ ingredient.unit|default:"" }} {{ ingredient.name }}</li>
+                {% empty %}
+                <li>No ingredients listed.</li>
+                {% endfor %}
+            </ul>
+        </div>
+        <div class="bg-white rounded-md">
+            <h2 class="text-2xl font-semibold mb-4 px-2">Instructions</h2>
+            <ol class="list-decimal list-inside space-y-3 px-4">
+                {% for instruction in instructions %}
+                <li>{{ instruction.description }}</li>
+                {% empty %}
+                <li>No instructions provided.</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+
+    <!-- Add to Collection Overlay -->
+    <div id="add-to-collection-overlay" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm hidden">
+        <div class="bg-white p-8 rounded-xl shadow-2xl w-full max-w-md relative">
+            <button id="close-collection-overlay-btn" class="absolute top-3 right-3 text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            <h3 class="text-xl font-bold mb-4">Zu Sammlung hinzufügen</h3>
+            <div id="collection-list" class="space-y-2">
+                {% for collection in collections %} {% if collection.id in collections_with_recipe %}
+                <button data-collection-id="{{ collection.id }}" data-action="remove" class="collection-toggle-item w-full text-left p-3 bg-green-100 text-green-800 rounded-lg flex justify-between items-center hover:bg-blue-100 transition">
+                    <span>{{ collection.name }}</span>
+                    <span class="text-green-600 font-bold">✓</span>
+                </button> {% else %}
+                <button data-collection-id="{{ collection.id }}" data-action="add" class="collection-toggle-item w-full text-left p-3 bg-gray-100 rounded-lg hover:bg-blue-100 transition">
+                    {{ collection.name }}
+                </button> {% endif %} {% empty %}
+                <p class="text-gray-600">Du hast noch keine Sammlungen. <a href="{% url 'collections' %}" class="text-blue-600 hover:underline">Jetzt eine erstellen.</a></p>
+                {% endfor %}
+            </div>
+            <div id="collection-feedback" class="mt-4 text-sm"></div>
+        </div>
+    </div>
+
+</div>
+{{ recipe.id|json_script:"recipe-id" }} {{ collections_with_recipe|json_script:"collections-with-recipe"}} {% csrf_token %}
+<script>
+    function handleImageError(imageElement, recipeId) {
+        //Chat GPT
+        imageElement.onerror = () => {};
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?.value;
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        fetch(`/recipe/refresh_thumbnail/${recipeId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok' && data.thumbnail_url) {
+                    imageElement.src = data.thumbnail_url;
+                }
+            })
+            .catch(error => console.error('Error refreshing thumbnail:', error));
+    }
+
+    function initCollectionOverlay() {
+        //add collection overlay
+        const addToCollectionBtn = document.getElementById('add-to-collection-btn');
+        const overlay = document.getElementById('add-to-collection-overlay');
+        const closeBtn = document.getElementById('close-collection-overlay-btn');
+        const collectionList = document.getElementById('collection-list');
+        const feedbackDiv = document.getElementById('collection-feedback');
+
+        if (!addToCollectionBtn || !overlay || !closeBtn || !collectionList) return;
+
+        addToCollectionBtn.onclick = () => {
+            overlay.classList.remove('hidden');
+        };
+
+        closeBtn.onclick = () => {
+            overlay.classList.add('hidden');
+            if (feedbackDiv) feedbackDiv.textContent = '';
+        };
+
+        collectionList.onclick = async(event) => {
+            const item = event.target.closest('.collection-toggle-item');
+            if (!item) return;
+
+            const action = item.dataset.action;
+            const collectionId = item.dataset.collectionId;
+            const url = action === 'add' ? "{% url 'add_recipe_to_collection' %}" : "{% url 'remove_recipe_from_collection' %}";
+
+            try {
+                const recipeId = JSON.parse(document.getElementById('recipe-id').textContent);
+                const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({
+                        recipe_id: recipeId,
+                        collection_id: collectionId
+                    })
+                });
+
+                if (response.status === 204) {
+                    if (action === 'add') {
+                        item.dataset.action = 'remove';
+                        item.classList.remove('bg-gray-100', 'hover:bg-blue-100');
+                        item.classList.add('bg-green-100', 'text-green-800', 'hover:bg-blue-100');
+                        item.innerHTML = `<span>${item.textContent.trim()}</span><span class="text-green-600 font-bold">✓</span>`;
+                    } else { // remove
+                        item.dataset.action = 'add';
+                        item.classList.remove('bg-green-100', 'text-green-800', 'hover:bg-blue-100');
+                        item.classList.add('bg-gray-100', 'hover:bg-blue-100');
+                        item.innerHTML = `<span>${item.textContent.trim().slice(0, -1)}</span>`;
+                    }
+                } else {
+                    const data = await response.json();
+                    if (feedbackDiv) feedbackDiv.textContent = data.message;
+                }
+
+            } catch (error) {
+                if (feedbackDiv) feedbackDiv.textContent = 'Ein Fehler ist aufgetreten.';
+            }
+        };
+    }
+    initCollectionOverlay();
+</script>

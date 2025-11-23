@@ -1,0 +1,71 @@
+<div class="max-w-5xl mx-auto p-6 space-y-6">
+    {% block scripts %} {{ recipe.id|json_script:"recipe-id"}} {% endblock %} {% csrf_token %}
+
+    <!-- Recipe Header with image -->
+    <div class="flex flex-col sm:flex-row items-center bg-white rounded-xl shadow-md p-4 gap-6">
+        <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer">
+            <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {recipe.id})">
+        </a>
+        <div class="flex-1">
+            <input type="text" value="{{ recipe.title }}" data-id="{{ recipe.id }}" data-field="title" data-type="recipe" class="auto-save-input text-3xl font-bold text-gray-800 w-full border rounded px-2 py-1" placeholder="Titel">
+            <textarea data-id="{{ recipe.id }}" data-field="description" data-type="recipe" class="auto-save-input text-gray-500 mt-2 w-full border rounded px-2 py-1" placeholder="Beschreibung">{{ recipe.description|default_if_none:'' }}</textarea>
+            <div class="text-gray-500 mt-1 text-sm flex items-center gap-2">
+                <span>Vorbereitung:</span>
+                <input type="text" value="{{ recipe.prep_time|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="prep_time" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+                <span>| Kochzeit:</span>
+                <input type="text" value="{{ recipe.cook_time|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="cook_time" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+                <span>| Portionen:</span>
+                <input type="text" value="{{ recipe.servings|default_if_none:'' }}" data-id="{{ recipe.id }}" data-field="servings" data-type="recipe" class="auto-save-input border rounded px-2 py-1 w-24" placeholder="...">
+            </div>
+        </div>
+    </div>
+
+
+    <div class="flex gap-6">
+
+        <!-- Ingredients -->
+        <section class="flex-1">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-2xl font-bold flex items-center gap-2">🧂 Zutaten</h2>
+                <button id="add-ingredient-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg text-sm">+</button>
+            </div>
+            {{ ingredient_formset.management_form }}
+
+            <div class="flex gap-2 font-bold underline text-black mb-1">
+                <span class="w-32">Name</span>
+                <span class="w-20">Menge</span>
+                <span class="w-20">Einheit</span>
+            </div>
+
+            <ul id="ingredient-list" class="space-y-1 text-black list-disc list-inside">
+                {% for form in ingredient_formset %} {% if form.instance.name or form.instance.quantity or form.instance.unit %}
+                <li class="flex gap-2 items-center" data-ingredient-id="{{ form.instance.id }}">
+                    <input type="text" value="{{ form.instance.name|default_if_none:'' }}" data-id="{{ form.instance.id }}" data-field="name" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-32" placeholder="">
+                    <input type="text" value="{{ form.instance.quantity|default_if_none:'' }}" data-id="{{ form.instance.id }}" data-field="quantity" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" value="{{ form.instance.unit|default_if_none:'' }}" data-id="{{ form.instance.id }}" data-field="unit" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="">
+                </li>
+                {% endif %} {% endfor %}
+            </ul>
+        </section>
+
+        <div class="w-px bg-gray-300"></div>
+
+        <!-- Instructions -->
+        <section class="flex-1">
+            <div class="flex justify-between items-center mb-2">
+                <h2 class="text-xl font-bold flex items-center gap-2">📋 Schritte</h2>
+                <button id="add-instruction-btn" class="bg-blue-500 hover:bg-blue-600 text-white font-bold py-1 px-3 rounded-lg text-sm">+</button>
+            </div>
+            {{ instruction_formset.management_form }}
+            <div id="instruction-list" class="rounded-xl shadow-2xl bg-white p-2">
+                {% for form in instruction_formset %} {% if form.instance.description %}
+                <div class="bg-white p-3 flex gap-2 items-start" data-instruction-id="{{ form.instance.id }}">
+                    <span class="font-bold text-3xl mt-1 step-number" data-step="{{ form.instance.step_number }}"></span>
+                    <textarea data-id="{{ form.instance.id }}" data-field="description" data-type="instruction" class="overflow-y-auto resize-none auto-save-input shadow-xl rounded px-2 py-1 w-full" placeholder="Schritt Beschreibung">{{ form.instance.description|default_if_none:'' }}
+                  </textarea>
+                </div>
+                {% endif %} {% endfor %}
+            </div>
+        </section>
+    </div>
+</div>

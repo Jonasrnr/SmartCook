@@ -1,14 +1,1 @@
-{% extends "recipes/base.html" %} {% load static %} {% block title %}{{ collection.name }}{% endblock %} {% block content %}
-<div class="max-w-5xl mx-auto p-6 space-y-6">
-    <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200 relative">
-        <h1 class="text-3xl font-bold text-gray-800 mb-2">{{ collection.name }}</h1>
-        <p class="text-gray-600 mb-8">{{ collection.description}}</p>
-
-        <div class="flex flex-wrap gap-6 justify-center">
-            {% for recipe in recipes %} {% include "recipes/recipe_card.html" with recipe=recipe %} {% empty %}
-            <p class="text-center text-gray-600 col-span-full">Diese Sammlung enthält noch keine Rezepte.</p>
-            {% endfor %}
-        </div>
-    </div>
-</div>
-{% endblock %}
+{% extends "recipes/base.html" %} {% load static %} {% block title %}{{ collection.name }}{% endblock %} {% block content %} {% include "recipes/partials/collection_detail_partial.html" %} {% endblock %}

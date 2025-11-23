@@ -1,0 +1,37 @@
+<div class="max-w-4xl mx-auto p-6 space-y-6">
+    <div class="max-w-4xl mx-auto bg-white p-8 rounded-xl shadow-md space-y-6">
+        <div class="flex justify-between items-center">
+            <h1 class="text-2xl font-bold text-gray-800">Profil von {{ user.username }}</h1>
+            {% if user == request.user %}
+            <div class="flex items-center gap-2" hx-target="#profile-status-text" hx-swap="outerHTML">
+                <span id="profile-status-text" class="text-sm font-medium text-gray-600">
+                    {% if user.userprofile.public_profile %}Profil öffentlich{% else %}Profil privat{% endif %}
+                </span> {% include "recipes/components/toggle_lock.html" with is_checked=user.userprofile.public_profile update_url=request.path field_name="public_profile" csrf_token=csrf_token %}
+            </div>
+            {% endif %}
+        </div>
+
+        <p class="mb-2"><strong>Username:</strong> {{ user.username }}</p>
+        <p class="mb-2"><strong>Email:</strong> {{ user.email }}</p>
+        <p class="mb-4"><strong>Registriert seit:</strong> {{ user.date_joined|date:"d.m.Y H:i" }}</p>
+
+        <h2 class="text-xl font-semibold mt-4 mb-2">Meine Rezepte</h2>
+        {% if recipes %}
+        <ul class="space-y-2">
+            {% for recipe in recipes %}
+            <li class="p-2 border rounded hover:bg-gray-100">
+                <a href="{% url 'recipe_detail' recipe.id %}" class="text-blue-600 font-medium">{{ recipe.title }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p>Du hast noch keine Rezepte erstellt.</p>
+        {% endif %}
+
+        <div class="mt-6">
+            <a href="{% url 'landing_page' %}" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-800">
+                Zurück zur Startseite
+            </a>
+        </div>
+    </div>
+</div>

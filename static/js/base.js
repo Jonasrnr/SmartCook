@@ -1,3 +1,5 @@
+import { initRecipeEdit } from "./edit_recipe.js";
+
 const sidebar = document.getElementById('sidebar');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebarTitle = document.getElementById('sidebar-title');
@@ -5,10 +7,6 @@ const navTexts = document.querySelectorAll('.nav-text');
 const contentWrapper = document.getElementById('content-wrapper');
 
 let isCollapsed = true;
-
-navTexts.forEach(text => {
-    text.classList.add('hidden');
-});
 
 sidebarToggle.addEventListener('click', () => {
     isCollapsed = !isCollapsed;
@@ -49,70 +47,49 @@ sidebarToggle.addEventListener('click', () => {
     }
 });
 
-const overlay = document.getElementById('loading-overlay');
-const content = document.getElementById('content-wrapper');
-
-window.domReadyQueue = [];
-window.onDomReady = function(callback) {
-    if (document.readyState === "loading") {
-        window.domReadyQueue.push(callback);
-    } else {
-        callback();
-    }
-}
-
 document.addEventListener('DOMContentLoaded', function() {
-    const tiktokForm = document.getElementById('tiktok-form');
-    const tiktokInput = document.getElementById('tiktok-link-input');
-
-    if (tiktokForm) {
-        tiktokForm.addEventListener('submit', function() {
-            overlay.style.display = 'flex';
-            overlay.classList.remove('opacity-0');
-            overlay.querySelector('span').textContent = 'Rezept wird verarbeitet...';
-        });
-    }
-
-    if (tiktokInput && tiktokForm) {
-        tiktokInput.addEventListener('paste', function() {
-            setTimeout(() => {
-                tiktokForm.submit();
-            }, 100);
-        });
-    }
-    window.domReadyQueue.forEach(fn => fn());
+    initRecipeEdit()
 });
 
-window.addEventListener('load', () => {
-    overlay.classList.add('opacity-0');
-    setTimeout(() => {
-        overlay.style.display = 'none';
-    }, 500);
-    content.classList.remove('opacity-0');
-});
+document.body.addEventListener('show-toast', function(evt) {
+    const toast = document.getElementById('toast-notification');
+    const messageEl = document.getElementById('toast-message');
 
-function handleImageError(imageElement, recipeId) {
-    // ChatGPT
-    imageElement.onerror = () => {}; // Verhindert Endlosschleifen und Konsolenfehler
-
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
-    if (!csrfToken) {
-        console.error("CSRF token not found.");
+    if (!evt.detail.message) {
         return;
     }
 
-    fetch(`/recipe/refresh_thumbnail/${recipeId}/`, {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': csrfToken,
-                'Content-Type': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'ok' && data.thumbnail_url) {
-                imageElement.src = data.thumbnail_url;
-            }
-        })
-        .catch(error => console.error('Error refreshing thumbnail:', error));
-}
+    const message = evt.detail.message;
+    const type = evt.detail.type || 'info';
+
+    messageEl.innerText = message;
+
+    toast.classList.remove('bg-green-600', 'bg-red-600', 'bg-blue-600');
+
+    if (type === 'success') {
+        toast.classList.add('bg-green-600');
+    } else if (type === 'error') {
+        toast.classList.add('bg-red-600');
+    } else {
+        toast.classList.add('bg-blue-600');
+    }
+
+    toast.classList.remove('opacity-0');
+    toast.classList.remove('pointer-events-none');
+    toast.classList.remove('translate-x-full');
+
+    setTimeout(() => {
+        toast.classList.add('translate-x-full');
+        toast.classList.add('opacity-0');
+        setTimeout(() => {
+            toast.classList.add('pointer-events-none');
+        }, 500);
+    }, 4000);
+});
+
+document.body.addEventListener('reload-content', function(evt) {
+    //custom event "reload-content"
+    setTimeout(() => {
+        htmx.ajax('GET', window.location.href, { target: '#main-content', swap: 'innerHTML' });
+    }, 200);
+});

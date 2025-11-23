@@ -6,10 +6,10 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 import json
 
-from .models import Recipe, Ingredient, Instruction, Friend, Collection
+from .models import Recipe, Ingredient, Instruction, Friend, Collection, UserProfile
 from services.RecipeExtractor import RecipeExtractor
 from services.getTikTokDesc import getTikTokDesc
 from services.getInstaDesc import getInstaDesc
@@ -67,7 +67,18 @@ def recipe_input(request):
                 elif "tiktok.com" in link:
                     description, thumbnail = getTikTokDesc(link)
                 else:
-                    raise ValueError("Nur TikTok- und Instagram-Links werden unterstützt.")
+                    toast_message = f"Es werden nur TikTok und Instagram-URLs unterstützt."
+                    response = HttpResponse(status=204)
+                    response['HX-Trigger'] = json.dumps({"show-toast": {"message": toast_message, "type": "error"}})
+                    return response
+
+                if not description or not thumbnail:
+                    toast_message = f"Fehler beim Extrahieren der Video Beschreibung"
+                    response = HttpResponse(status=204)
+                    response['HX-Trigger'] = json.dumps({
+                        "show-toast": {"message": toast_message, "type": "error"},
+                    })
+                    return response
 
                 extractor = RecipeExtractor(api_key=settings.LANGEXTRACT_API_KEY)
                 annotated_doc = extractor.extract_recipe(description)
@@ -98,16 +109,34 @@ def recipe_input(request):
                             Instruction.objects.create(
                                 recipe=recipe, step_number=i + 1, description=desc.strip()
                             )
-                        return redirect("landing_page")
+                        
+                        toast_message = f"Rezept wurde erfolgreich hinzugefügt"
+                        response = HttpResponse(status=204)
+                        response['HX-Trigger'] = json.dumps({
+                            "show-toast": {"message": toast_message, "type": "success"},
+                            "reload-content": True
+                        })
+                        return response
                     else:
                         message = "Keine Recipe-Extraction gefunden."
 
                 else:
-                    message = "Fehler: Recipe konnte nicht extrahiert werden."
+                    toast_message = f"Fehler beim Extrahieren des Rezepts aus der Beschreibung."
+                    response = HttpResponse(status=204)
+                    response['HX-Trigger'] = json.dumps({
+                        "show-toast": {"message": toast_message, "type": "error"},
+                    })
+                    return response
 
             # TODO: Error Messages
             except Exception as e:
-                message = f"Fehler: {e}"
+                toast_message = e
+                response = HttpResponse(status=204)
+                response['HX-Trigger'] = json.dumps({
+                    "show-toast": {"message": toast_message, "type": "error"},
+                    "reload-content": True
+                })
+                return response
         return render(request, "recipes/landing_page.html", {"message": message})
     return render(request, "recipes/landing_page.html")
 
@@ -115,25 +144,56 @@ def recipe_input(request):
 @login_required
 def profile_view(request, user_id=None):
     if user_id:
-        user = get_object_or_404(User, id=user_id)
+        profile_user = get_object_or_404(User, id=user_id)
     else:
-        user = request.user
+        profile_user = request.user
 
-    if user == request.user:
-        recipes = Recipe.objects.filter(user=user).order_by("-id")
+    is_private = not getattr(profile_user, 'userprofile', None) or not profile_user.userprofile.public_profile
+    if is_private and profile_user != request.user and request.headers.get("HX-Request") == "true":
+        toast_message = f"Das Profil von {profile_user.username} ist privat."
+        response = HttpResponse(status=204)
+        response['HX-Trigger'] = json.dumps({"show-toast": toast_message})
+        return response
+
+    if request.method == "POST":
+        print("TEST")
+        if profile_user != request.user:
+            return JsonResponse({"status": "error", "message": "Unauthorized"}, status=403)
+        user_profile = get_object_or_404(UserProfile, user=request.user)
+
+        is_checked = 'public_profile' in request.POST
+        user_profile.public_profile = is_checked
+        user_profile.save(update_fields=['public_profile'])
+
+        new_text = "Profil öffentlich" if is_checked else "Profil privat"
+        html = f'<span id="profile-status-text" class="text-sm font-medium text-gray-600">{new_text}</span>'
+        return HttpResponse(html)
+
+    if profile_user == request.user:
+        recipes = Recipe.objects.filter(user=profile_user).order_by("-id")
     else:
-        recipes = Recipe.objects.filter(user=user).order_by("-id")
+        recipes = Recipe.objects.filter(user=profile_user).order_by("-id")
 
+    if request.headers.get("HX-Request") == "true":
+        return render(
+            request,
+            "recipes/partials/profile_partial.html",
+            {"user": profile_user, "recipes": recipes},
+        )
     return render(
         request,
         "recipes/profile.html",
-        {"user": user, "recipes": recipes},
+        {"user": profile_user, "recipes": recipes},
     )
 
 
 @login_required
 def landing_page(request):
     recipes = Recipe.objects.filter(user=request.user).order_by("-id")
+
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/landing_page_partial.html", {"recipes": recipes})
+
     return render(request, "recipes/landing_page.html", {"recipes": recipes})
 
 
@@ -159,6 +219,8 @@ def recipe_detail(request, recipe_id):
         "collections": user_collections,
         "collections_with_recipe": collections_with_recipe,
     }
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/recipe_detail_partial.html", context)
     return render(request, "recipes/recipe_detail.html", context)
 
 
@@ -176,6 +238,8 @@ def recipe_edit(request, recipe_id):
         "ingredient_formset": ingredient_formset,
         "instruction_formset": instruction_formset,
     }
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/recipe_edit_partial.html", context)
     return render(request, "recipes/recipe_edit.html", context)
 
 
@@ -363,8 +427,16 @@ def friends_view(request):
     friend_profile = request.user.friend_profile
     friends = friend_profile.friends.all()
     all_users = User.objects.exclude(id=request.user.id)
+    public_users = all_users.filter(userprofile__public_profile=True)
 
-    potential_friends = all_users.exclude(id__in=friends.values_list("id", flat=True))
+    potential_friends = public_users.exclude(id__in=friends.values_list("id", flat=True), )
+    if request.headers.get("HX-Request") == "true":
+        return render(
+            request,
+            "recipes/partials/friends_partial.html",
+            {"friends": friends, "potential_friends": potential_friends}
+        )
+    
     return render(
         request,
         "recipes/friends.html",
@@ -399,6 +471,8 @@ def collections_view(request):
         "form": form,
         "collections": collections,
     }
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/collections_partial.html", context)
     return render(request, "recipes/collections.html", context)
 
 @login_required
@@ -410,6 +484,9 @@ def collection_detail(request, collection_id):
         "collection": collection,
         "recipes": recipes,
     }
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/collection_detail_partial.html", context)
+
     return render(request, "recipes/collection_detail.html", context)
 
 @login_required
@@ -423,8 +500,7 @@ def remove_friend(request, friend_id):
 @login_required
 @require_POST
 def refresh_thumbnail(request, recipe_id):
-    print("test")
-    recipe = get_object_or_404(Recipe, pk=recipe_id, user=request.user)
+    recipe = get_object_or_404(Recipe, pk=recipe_id)
     if not recipe.url:
         return JsonResponse({"status": "error", "message": "No TikTok URL for this recipe."}, status=400)
 
@@ -487,4 +563,6 @@ def search_view(request):
         results = searchRecipes(query, recipes)
         recipes = [recipe for recipe, score in results]
         print(recipes)
+    if request.headers.get("HX-Request") == "true":
+        return render(request, "recipes/partials/search_partial.html", {"query": query, "recipes": recipes})
     return render(request, "recipes/search.html", {"query": query, "recipes": recipes})

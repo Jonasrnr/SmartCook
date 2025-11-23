@@ -3,7 +3,7 @@
     <div class="group relative bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 border border-gray-100 overflow-hidden">
         <div class="relative h-40 overflow-hidden">
             {% if recipe.url %}
-            <a href="{% url 'recipe_detail' recipe.id %}" class="block h-full">
+            <a hx-get="{% url 'recipe_detail' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" class="block h-full">
                 <img src="{{ recipe.thumbnail|default:'https://placehold.co/600x400/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500 ease-in-out" onerror="handleImageError(this, {{ recipe.id }})">
             </a>
             {% endif %}
@@ -18,7 +18,7 @@
         <div class="p-4 flex flex-col justify-between h-56">
             <div>
                 <h3 class="text-lg font-semibold transition group-hover:text-indigo-600">
-                    <a href="{% url 'recipe_detail' recipe.id %}" class="text-gray-900 hover:text-indigo-600">
+                    <a hx-get="{% url 'recipe_detail' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" lass="text-gray-900 hover:text-indigo-600">
                                             {{ recipe.title }}
                                         </a>
                 </h3>
@@ -38,10 +38,10 @@
             <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
                 <div class="flex items-center gap-1">
                     {% if recipe.original_creator %}
-                    <span class="text-xs text-gray-400">{{ recipe.original_creator.username }}</span> {% endif %}
+                    <a hx-get="{% url 'profile_view' recipe.original_creator.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" class="text-xs text-gray-400">{{ recipe.original_creator.username }}</a> {% endif %}
                 </div>
                 <div class="flex space-x-2">
-                    <a href="{% url 'recipe_edit' recipe.id %}" title="Bearbeiten" class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
+                    <a hx-get="{% url 'recipe_edit' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" title="Bearbeiten" class="p-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-700 transition">
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                     d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
@@ -53,3 +53,31 @@
 
     </div>
 </div>
+
+<script>
+    function handleImageError(imageElement, recipeId) {
+        //Chat GPT
+        imageElement.onerror = () => {};
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?.value;
+        if (!csrfToken) {
+            console.error("CSRF token not found.");
+            return;
+        }
+
+        fetch(`/recipe/refresh_thumbnail/${recipeId}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': csrfToken,
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'ok' && data.thumbnail_url) {
+                    imageElement.src = data.thumbnail_url;
+                }
+            })
+            .catch(error => console.error('Error refreshing thumbnail:', error));
+    }
+</script>

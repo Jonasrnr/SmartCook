@@ -1,0 +1,20 @@
+<div class="w-full p-6 shadow-lg">
+    <h1 class="text-2xl font-bold text-gray-800 mb-4 text-center">Rezept Suche</h1>
+    <form method="get" action="{% url 'search' %}" class="mb-6">
+        <div class="flex items-center border bg-white bg-opacity-50 border-white rounded py-2 px-2">
+            <input type="text" id="search-input" name="q" value="{{ query }}" placeholder="Suche nach Rezepten..." class="appearance-none bg-transparent border-none w-full text-gray mr-3 py-1 px-2 leading-tight focus:outline-none" required>
+            <button type="submit" class="flex-shrink-0 bg-blue-500 hover:bg-blue-600 text-white font-semibold py-1 px-4 rounded">
+                Suchen
+            </button>
+        </div>
+    </form>
+
+    {% if recipes %}
+    <h2 class="text-xl font-semibold text-gray-800 mb-4">Suchergebnisse für "{{ query }}":</h2>
+    <div id="search-results" class="flex flex-wrap gap-6 justify-center">
+        {% for recipe in recipes %} {% include "recipes/components/recipe_card.html" with recipe=recipe %} {% endfor %}
+    </div>
+    {% else %}
+    <p class="text-center text-gray-600">Keine Ergebnisse gefunden.</p>
+    {% endif %}
+</div>

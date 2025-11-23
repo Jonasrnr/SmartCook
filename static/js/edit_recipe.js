@@ -1,6 +1,7 @@
-window.domReadyQueue.push(() => {
-    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-    const recipeId = JSON.parse(document.getElementById('recipe-id').textContent);
+export function initRecipeEdit() {
+    const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?.value;
+    const recipeIdElem = document.getElementById('recipe-id');
+    const recipeId = JSON.parse(recipeIdElem.textContent);
 
     // --- HILFSFUNKTIONEN ---
     function getStepEmoji(number) {
@@ -24,7 +25,6 @@ window.domReadyQueue.push(() => {
         const el = event.target;
         const { id, field, type } = el.dataset;
         const value = el.value;
-
         if (!id || !field || !type) return;
 
         let url;
@@ -58,7 +58,6 @@ window.domReadyQueue.push(() => {
                 const elementToRemove = el.closest(`[data-${type}-id="${data.id}"]`);
                 if (elementToRemove) elementToRemove.remove();
                 if (data.renumber) {
-
                     location.reload();
                 }
             } else {
@@ -87,10 +86,10 @@ window.domReadyQueue.push(() => {
                     newLi.className = "flex gap-2 items-center";
                     newLi.dataset.ingredientId = data.id;
                     newLi.innerHTML = `
-                        <input type="text" data-id="${data.id}" data-field="name" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-32" placeholder="Name">
-                        <input type="text" data-id="${data.id}" data-field="quantity" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="Menge" inputmode="numeric" pattern="[0-9]*">
-                        <input type="text" data-id="${data.id}" data-field="unit" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="Einheit">
-                    `;
+                    <input type="text" data-id="${data.id}" data-field="name" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-32" placeholder="Name">
+                    <input type="text" data-id="${data.id}" data-field="quantity" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="Menge" inputmode="numeric" pattern="[0-9]*">
+                    <input type="text" data-id="${data.id}" data-field="unit" data-type="ingredient" class="auto-save-input border rounded px-2 py-1 w-20" placeholder="Einheit">
+                `;
                     list.appendChild(newLi);
                     newLi.querySelectorAll(".auto-save-input").forEach(input => input.addEventListener("change", handleAutoSave));
                     newLi.querySelector('input').focus();
@@ -100,9 +99,9 @@ window.domReadyQueue.push(() => {
                     newDiv.className = "bg-white p-3 flex gap-2 items-start";
                     newDiv.dataset.instructionId = data.id;
                     newDiv.innerHTML = `
-                        <span class="font-bold text-3xl mt-1 step-number" data-step="${data.step_number}">${getStepEmoji(data.step_number)}</span>
-                        <textarea data-id="${data.id}" data-field="description" data-type="instruction" class="overflow-y-auto resize-none auto-save-input shadow-xl rounded px-2 py-1 w-full" placeholder="Schritt Beschreibung"></textarea>
-                    `;
+                    <span class="font-bold text-3xl mt-1 step-number" data-step="${data.step_number}">${getStepEmoji(data.step_number)}</span>
+                    <textarea data-id="${data.id}" data-field="description" data-type="instruction" class="overflow-y-auto resize-none auto-save-input shadow-xl rounded px-2 py-1 w-full" placeholder="Schritt Beschreibung"></textarea>
+                `;
                     list.appendChild(newDiv);
                     const newTextarea = newDiv.querySelector("textarea");
                     newTextarea.addEventListener("input", autoResizeTextarea);
@@ -143,4 +142,4 @@ window.domReadyQueue.push(() => {
     if (addInstructionBtn) {
         addInstructionBtn.addEventListener("click", () => addNewItem('instruction'));
     }
-});
+};
