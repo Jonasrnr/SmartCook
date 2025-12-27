@@ -3,11 +3,13 @@
 {% load static %}
 
 <head>
+    <link rel="icon" href="{% static 'favicon.ico' %}">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SmartCook{% endblock %}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+    <script src="{% static 'js/edit_recipe.js' %}"></script>
     <style>
         /*--HTMX Links clickable appearence--*/
         

@@ -1,5 +1,3 @@
-import { initRecipeEdit } from "./edit_recipe.js";
-
 const sidebar = document.getElementById('sidebar');
 const sidebarToggle = document.getElementById('sidebar-toggle');
 const sidebarTitle = document.getElementById('sidebar-title');
@@ -45,10 +43,6 @@ sidebarToggle.addEventListener('click', () => {
 
         sidebarToggle.style.transform = 'rotate(0deg)';
     }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-    initRecipeEdit()
 });
 
 document.body.addEventListener('show-toast', function(evt) {

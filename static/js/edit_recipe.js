@@ -1,4 +1,4 @@
-export function initRecipeEdit() {
+function initRecipeEdit() {
     const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]') ?.value;
     const recipeIdElem = document.getElementById('recipe-id');
     const recipeId = JSON.parse(recipeIdElem.textContent);
