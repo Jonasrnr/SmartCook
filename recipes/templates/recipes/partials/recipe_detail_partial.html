@@ -1,72 +1,98 @@
 <div class="max-w-5xl mx-auto p-6">
 
     <!-- Recipe Header: Title, Description, Image, Buttons-->
-    <div class="flex flex-col sm:flex-row items-start bg-white rounded-xl shadow-md p-4 gap-6">
-        <div class="flex flex-col gap-4">
-            <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
-                <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full sm:w-48 h-32 object-cover rounded-xl shadow-md" onerror="handleImageError(this, {{recipe.id}})">
-            </a>
-            <div class="flex gap-2">
-                {% if recipe.user == request.user %}
-                <a hx-get="{% url 'recipe_edit' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" class="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg">Bearbeiten</a>
-                <button id="add-to-collection-btn" class="bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        + Sammlung
-                    </button>
-                <form method="post" action="{% url 'recipe_delete' recipe.id %}" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');">
-                    {% csrf_token %}
-                    <button type="submit" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg">Löschen
+    <div class="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div class="flex flex-col md:flex-row">
+            <!-- Image -->
+            <div class="relative w-full md:w-48 lg:w-56 h-56 md:h-auto overflow-hidden flex-shrink-0">
+                <a href="{{ recipe.url }}" target="_blank" rel="noopener noreferrer" class="flex-shrink-0">
+                    <img src="{{ recipe.thumbnail|default:'https://placehold.co/300x200/2563EB/ffffff?text=Rezept+Bild' }}" alt="{{ recipe.title }}" class="w-full h-full object-cover" onerror="handleImageError(this, {{recipe.id}})">
+                </a>
+            </div>
+
+            <!-- Content -->
+            <div class="flex-1 p-5 md:p-6 flex flex-col">
+                <div class="flex justify-between items-start gap-4 mb-2">
+                    <h1 class="text-xl md:text-2xl font-bold">{{ recipe.title }}</h1>
+
+                    <!-- Buttons -->
+                    <div class="flex gap-2 flex-shrink-0">
+                        {% if recipe.user == request.user %}
+                        <a hx-get="{% url 'recipe_edit' recipe.id %}" hx-push-url="true" hx-target="#main-content" hx-swap="innerHTML" class="p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition" title="Bearbeiten">
+                                ✏️
+                        </a>
+                        <button id="add-to-collection-btn" class="p-2 bg-indigo-100 text-indigo-600 rounded-lg hover:bg-indigo-200 transition" title="Zu Sammlung hinzufügen">
+                                📂
                         </button>
-                </form>
-                {% else %}
-                <a href="{% url 'add_recipe_from_friend' recipe.id %}" class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-lg">
-                        Zu meinen Rezepten hinzufügen
-                    </a> {% endif %}
+                        <form method="post" action="{% url 'recipe_delete' recipe.id %}" onsubmit="return confirm('Möchtest du dieses Rezept wirklich löschen?');" class="inline">
+                            {% csrf_token %}
+                            <button type="submit" class="p-2 bg-red-300 text-red-600 rounded-lg hover:bg-red-600 transition" title="Löschen">
+                                    🗑️
+                            </button>
+                        </form>
+                        {% else %}
+                        <!--TODO: Toast-->
+                        <a href="{% url 'add_recipe_from_friend' recipe.id %}" class="px-3 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700 transition shadow-sm">
+                                Zu meinen Rezepten hinzufügen
+                        </a> {% endif %}
+                    </div>
+                </div>
+
+                <p class="text-gray-500 flex-grow">{{ recipe.description }}</p>
+
+                <!-- Recipe Details: Prep Time, Cook Time, Servings -->
+                <div class="grid grid-cols-3 gap-4">
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] text-gray-400 uppercase font-bold">Vorbereitung</span>
+                        <span class="font-medium text-gray-700 text-xs">{{ recipe.prep_time|default:"-" }}</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] text-gray-400 uppercase font-bold">Kochen</span>
+                        <span class="font-medium text-gray-700 text-xs">{{ recipe.cook_time|default:"-" }}</span>
+                    </div>
+                    <div class="flex flex-col items-center">
+                        <span class="text-[9px] text-gray-400 uppercase font-bold">Portionen</span>
+                        <span class="font-medium text-gray-700 text-xs">{{ recipe.servings|default:"-" }}</span>
+                    </div>
+                </div>
             </div>
         </div>
-
-        <div class="flex-1">
-            <h1 class="text-3xl font-bold text-gray-800">{{ recipe.title }}</h1>
-            <p class="text-gray-500 mt-2">{{ recipe.description }}</p>
-        </div>
     </div>
 
-    <!-- Recipe Details: Prep Time, Cook Time, Servings -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 text-center py-2">
-        <div class="bg-blue-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-700">Prep Time</h3>
-            <p>{{ recipe.prep_time|default:"N/A" }}</p>
-        </div>
-        <div class="bg-blue-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-700">Cook Time</h3>
-            <p>{{ recipe.cook_time|default:"N/A" }}</p>
-        </div>
-        <div class="bg-blue-50 p-4 rounded-lg">
-            <h3 class="font-semibold text-gray-700">Servings</h3>
-            <p>{{ recipe.servings|default:"N/A" }}</p>
-        </div>
-    </div>
-
-    <!-- Ingredients and Instructions -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-        <div class="bg-white rounded-md">
-            <h2 class="text-2xl font-semibold mb-4 px-2">Ingredients</h2>
-            <ul class="list-disc list-inside space-y-2 px-4">
+    <div class="grid grid-cols-1 md:grid-cols-12 gap-8 py-6">
+        <!-- Ingredients -->
+        <div class="md:col-span-5 bg-white rounded-2xl p-5">
+            <h2 class="font-bold text-gray-800 flex items-center gap-2 text-lg mb-4">🧂 Zutaten</h2>
+            <ul class="space-y-1">
                 {% for ingredient in ingredients %}
-                <li>{{ ingredient.quantity|default:"" }} {{ ingredient.unit|default:"" }} {{ ingredient.name }}</li>
+                <li class="flex items-baseline justify-between border-b border-gray-300 pb-2 last:border-0">
+                    <span class="font-medium text-gray-800 text-sm">{{ ingredient.name }}</span>
+                    <span class="text-xs text-gray-500 ml-2 bg-gray-100 px-2 py-1 rounded-md">
+                        {{ ingredient.quantity|default:"" }} {{ ingredient.unit|default:"" }}
+                    </span>
+                </li>
                 {% empty %}
-                <li>No ingredients listed.</li>
+                <li class="text-sm">Keine Zutaten angegeben.</li>
                 {% endfor %}
             </ul>
         </div>
-        <div class="bg-white rounded-md">
-            <h2 class="text-2xl font-semibold mb-4 px-2">Instructions</h2>
-            <ol class="list-decimal list-inside space-y-3 px-4">
+
+        <!-- Instructions -->
+        <div class="md:col-span-7 bg-white rounded-2xl p-5">
+            <h2 class="font-bold text-gray-800 flex items-center gap-2 text-lg mb-4">📋 Zubereitung</h2>
+            <div class="space-y-6">
                 {% for instruction in instructions %}
-                <li>{{ instruction.description }}</li>
+                <!-- Gemini helped-->
+                <div class="relative pl-10 group">
+                    <div class="absolute left-0 top-0 w-7 h-7 bg-indigo-50 text-indigo-600 rounded-full flex items-center justify-center font-bold text-xs">
+                        {{ instruction.step_number }}
+                    </div>
+                    <p class="text-gray-700 text-sm leading-relaxed">{{ instruction.description }}</p>
+                </div>
                 {% empty %}
-                <li>No instructions provided.</li>
+                <p class="text-sm">Keine Schritte angegeben.</p>
                 {% endfor %}
-            </ol>
+            </div>
         </div>
     </div>
 

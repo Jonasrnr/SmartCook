@@ -1,18 +1,1 @@
-{% extends "recipes/base.html" %} {% load static %} {% block title %}Meine Sammlungen{% endblock %} {% block content %} {% include "recipes/partials/collections_partial.html" %} {% endblock %} {% block scripts %}
-
-<script>
-    window.domReadyQueue.push(() => {
-        const addBtn = document.getElementById('add-collection-btn');
-        const overlay = document.getElementById('add-collection-overlay');
-        const closeBtn = document.getElementById('close-overlay-btn');
-
-        addBtn.addEventListener('click', () => {
-            overlay.classList.remove('hidden');
-        });
-
-        closeBtn.addEventListener('click', () => {
-            overlay.classList.add('hidden');
-        });
-    });
-</script>
-{% endblock %}
+{% extends "recipes/base.html" %} {% load static %} {% block title %}Meine Sammlungen{% endblock %} {% block content %} {% include "recipes/partials/collections_partial.html" %} {% endblock %} {% block scripts %} {% endblock %}

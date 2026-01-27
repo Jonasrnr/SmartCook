@@ -128,7 +128,6 @@ def recipe_input(request):
                     })
                     return response
 
-            # TODO: Error Messages
             except Exception as e:
                 toast_message = e
                 response = HttpResponse(status=204)
@@ -195,6 +194,22 @@ def landing_page(request):
         return render(request, "recipes/partials/landing_page_partial.html", {"recipes": recipes})
 
     return render(request, "recipes/landing_page.html", {"recipes": recipes})
+
+@login_required
+def recipe_add(request):
+    if request.method == "POST":
+        form = RecipeForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.instance.user = request.user
+            form.instance.original_creator = request.user
+            form.save()
+            #TODO: Toast message
+            return redirect("recipe_detail", recipe_id=form.instance.id)
+    else:
+        form = RecipeForm()
+
+    template = "recipes/partials/recipe_add_partial.html" if request.headers.get("HX-Request") else "recipes/recipe_add.html"
+    return render(request, template, {"form": form})
 
 
 @login_required

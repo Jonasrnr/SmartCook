@@ -1,7 +1,7 @@
 <div class="max-w-4xl mx-auto p-6 space-y-6">
 
     <!-- List of Collections -->
-    <div class="max-w-4xl mx-auto p-12 space-y-12 bg-white rounded-xl shadow-lg border border-gray-200 relative">
+    <div class="max-w-4xl mx-auto p-12 bg-white rounded-xl shadow-lg border border-gray-200 relative">
 
         <div class="flex justify-between items-center mb-4">
             <h2 class="text-2xl font-bold text-gray-800">Meine Sammlungen</h2>
@@ -49,3 +49,16 @@
     </div>
 
 </div>
+
+<script>
+    (function() {
+        const addBtn = document.getElementById('add-collection-btn');
+        const overlay = document.getElementById('add-collection-overlay');
+        const closeBtn = document.getElementById('close-overlay-btn');
+
+        if (addBtn && overlay && closeBtn) {
+            addBtn.addEventListener('click', () => overlay.classList.remove('hidden'));
+            closeBtn.addEventListener('click', () => overlay.classList.add('hidden'));
+        }
+    })();
+</script>

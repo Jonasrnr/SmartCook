@@ -22,7 +22,8 @@
     <!-- Horizontal Scroller -->
     <div class="w-full mx-auto px-4">
         <h2 class="text-2xl font-semibold mb-4 px-2">Rezepte</h2>
-        <div class="w-full mx-auto overflow-x-auto hide-scroll-bar py-2">
+        <!-- TODO: looks bad on smaller screens-->
+        <div id="recipe-scroller" class="w-full mx-auto overflow-x-auto hide-scroll-bar py-2">
             <div class="flex flex-nowrap gap-6">
                 {% for recipe in recipes|dictsortreversed:"id" %} {% include "recipes/components/recipe_card.html" with recipe=recipe %} {% endfor %}
             </div>

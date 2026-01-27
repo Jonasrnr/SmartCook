@@ -22,20 +22,68 @@ class UserSignupForm(UserCreationForm):
 class UserLoginForm(AuthenticationForm):
     def __init__(self, *args, **kwargs):
         super(UserLoginForm, self).__init__(*args, **kwargs)
-
-
-class RecipeForm(forms.ModelForm):
-    class Meta:
-        model = Recipe
-        fields = "__all__"
+        self.fields["username"].widget.attrs.update(
+            {
+                "class": "border-black border-2 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            }
+        )
+        self.fields["password"].widget.attrs.update(
+            {
+                "class": "border-black border-2 rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+            }
+        )
 
 
 IngredientFormSet = forms.inlineformset_factory(
-    Recipe, Ingredient, fields=("name", "quantity", "unit"), extra=0
+    Recipe, Ingredient, fields=("name", "quantity", "unit"), extra=1
 )
+
 InstructionFormSet = forms.inlineformset_factory(
-    Recipe, Instruction, fields=("description",), extra=0
+    Recipe, Instruction, fields=("step_number", "description"), extra=1
 )
+
+
+class RecipeForm(forms.ModelForm):
+    image = forms.ImageField(required=False, widget=forms.ClearableFileInput(attrs={
+        "class": "border rounded-md px-3 py-2 w-full"
+    }))
+
+    class Meta:
+        model = Recipe
+        exclude = ["user", "original_creator"]
+        widgets = {
+            "title": forms.TextInput(attrs={
+                "class": "border rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "placeholder": "Titel des Rezepts"
+            }),
+            "description": forms.Textarea(attrs={
+                "class": "border rounded-md px-3 py-2 w-full focus:outline-none focus:ring-2 focus:ring-blue-500",
+                "placeholder": "Beschreibung",
+                "rows": 4
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        formset_kwargs = kwargs.copy()
+        formset_kwargs.pop("instance", None)
+        self.ingredient_formset = IngredientFormSet(*args, **formset_kwargs, instance=self.instance, prefix="ingredients")
+        self.instruction_formset = InstructionFormSet(*args, **formset_kwargs, instance=self.instance, prefix="instructions")
+
+    def is_valid(self):
+        return super().is_valid() and self.ingredient_formset.is_valid() and self.instruction_formset.is_valid()
+
+    def save(self, commit=True):
+        recipe = super().save(commit=commit)
+        if commit:
+            self.ingredient_formset.instance = recipe
+            self.ingredient_formset.save()
+            self.instruction_formset.instance = recipe
+            self.instruction_formset.save()
+        return recipe
+
+
 class CollectionForm(forms.ModelForm):
     class Meta:
         model = Collection

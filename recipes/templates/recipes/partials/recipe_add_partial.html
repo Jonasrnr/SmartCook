@@ -1,0 +1,173 @@
+<!-- ----------------------------------------- -->
+<!-- Gemini helped to dynamically add formsets -->
+<!-- ----------------------------------------- -->
+
+<div class="max-w-5xl mx-auto p-4 md:p-8 space-y-6 pb-24 min-h-screen">
+    <h1 class="text-4xl text-center font-bold text-gray-800 mb-2">Neues Rezept erstellen</h1>
+
+    <form method="post" enctype="multipart/form-data" class="space-y-8">
+        {% csrf_token %}
+
+        <!-- Recipe Header with image -->
+        <header class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="flex flex-col md:flex-row">
+                <!-- Image -->
+                <div class="w-full md:w-48 lg:w-56 bg-gray-50 p-6 flex flex-col justify-center items-center border-b md:border-b-0 md:border-r border-gray-100">
+                    <div class="text-center space-y-2">
+                        <label class="block text-xs font-bold text-gray-400 uppercase">Rezeptbild</label>
+                        <div class="text-xs">
+                            {{ form.image }}
+                        </div>
+                    </div>
+                    {{ form.image.errors }}
+                </div>
+
+                <!-- Main Inputs -->
+                <div class="flex-1 p-5 md:p-6 space-y-4">
+                    <div class="space-y-1">
+                        <input type="text" name="{{ form.title.html_name }}" value="{{ form.title.value|default_if_none:'' }}" class="text-xl md:text-2xl font-bold text-gray-900 w-full border-0 border-b border-gray-200 focus:ring-0 focus:border-indigo-500 p-0 pb-1 placeholder-gray-300 transition-colors"
+                            placeholder="Name des Rezepts..."> {{ form.title.errors }}
+                    </div>
+
+                    <textarea name="{{ form.description.html_name }}" class="text-gray-500 w-full border-0 border-b border-gray-200 focus:ring-0 focus:border-indigo-500 p-0 pb-1 resize-none text-sm leading-snug" placeholder="Kurze Beschreibung..." rows="2">{{ form.description.value|default_if_none:'' }}</textarea>                    {{ form.description.errors }}
+
+                    <!-- Prep, Cook, Servings -->
+                    <div class="grid grid-cols-3 gap-2 pt-3 border-t border-gray-50">
+                        <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold text-center">Vorbereitung</span>
+                            <input type="text" name="{{ form.prep_time.html_name }}" value="{{ form.prep_time.value|default_if_none:'' }}" class="font-medium text-gray-700 border-none focus:ring-0 p-0 text-xs text-center bg-transparent placeholder-gray-300" placeholder="-">
+                        </div>
+                        <div class="flex flex-col border-x border-gray-100">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold text-center">Kochen</span>
+                            <input type="text" name="{{ form.cook_time.html_name }}" value="{{ form.cook_time.value|default_if_none:'' }}" class="font-medium text-gray-700 border-none focus:ring-0 p-0 text-xs text-center bg-transparent placeholder-gray-300" placeholder="-">
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="text-[9px] text-gray-400 uppercase font-bold text-center">Portionen</span>
+                            <input type="text" name="{{ form.servings.html_name }}" value="{{ form.servings.value|default_if_none:'' }}" class="font-medium text-gray-700 border-none focus:ring-0 p-0 text-xs text-center bg-transparent placeholder-gray-300" placeholder="-">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <!-- Ingredient FormSet -->
+            <section class="md:col-span-5 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2 text-lg mb-4">🧂 Zutaten</h2>
+                {{ form.ingredient_formset.management_form }}
+
+                <div id="ingredients-container" class="space-y-2 mb-4">
+                    {% for ingredient_form in form.ingredient_formset %}
+                    <div class="grid grid-cols-12 gap-2">
+                        {{ ingredient_form.id }}
+                        <div class="col-span-3">
+                            <input type="number" step="any" name="{{ ingredient_form.quantity.html_name }}" value="{{ ingredient_form.quantity.value|default_if_none:'' }}" placeholder="Menge" class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 bg-gray-50 border-0">
+                        </div>
+                        <div class="col-span-3">
+                            <input type="text" name="{{ ingredient_form.unit.html_name }}" value="{{ ingredient_form.unit.value|default_if_none:'' }}" placeholder="Einh." class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 bg-gray-50 border-0">
+                        </div>
+                        <div class="col-span-6">
+                            <input type="text" name="{{ ingredient_form.name.html_name }}" value="{{ ingredient_form.name.value|default_if_none:'' }}" placeholder="Zutat" class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 font-medium bg-gray-50 border-0">
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" onclick="addForm('ingredients')" class="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-2 border-dashed border-indigo-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.98]">
+                    + Zutat hinzufügen
+                </button>
+            </section>
+
+            <!-- Instructions FormSet -->
+            <section class="md:col-span-7 bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col">
+                <h2 class="font-bold text-gray-800 flex items-center gap-2 text-lg mb-4">📋 Schritte</h2>
+                {{ form.instruction_formset.management_form }}
+
+                <div id="instructions-container" class="space-y-4 mb-6">
+                    {% for instruction_form in form.instruction_formset %}
+                    <div class="relative pl-10 group">
+                        {{ instruction_form.id }}
+                        <div class="absolute left-0 top-0 w-7 h-7 bg-gray-50 rounded-full flex items-center justify-center font-bold text-black group-focus-within:bg-indigo-600 group-focus-within:text-white transition-all">
+                            <!-- Hidden input for step number, visual counter via CSS/JS or simple text -->
+                            <input type="number" name="{{ instruction_form.step_number.html_name }}" value="{{ instruction_form.step_number.value|default_if_none:forloop.counter }}" class="step-number-input hidden">
+                            <span class="text-[10px]">{{ forloop.counter }}</span>
+                        </div>
+                        <textarea name="{{ instruction_form.description.html_name }}" rows="3" placeholder="Schritt beschreiben..." class="w-full border-gray-100 focus:ring-4 focus:ring-indigo-50/50 rounded-xl p-3 text-sm text-gray-700 shadow-sm transition-all resize-none bg-gray-50 border-0">{{ instruction_form.description.value|default_if_none:'' }}</textarea>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                <button type="button" onclick="addForm('instructions')" class="w-full py-3 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border-2 border-dashed border-indigo-200 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all active:scale-[0.98]">
+                    + Schritt hinzufügen
+                </button>
+            </section>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+            <button type="submit" class="bg-indigo-600 text-white px-8 py-3 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-200 shadow-lg transition-all font-bold">
+                Rezept speichern
+            </button>
+        </div>
+    </form>
+
+    <!-- Hidden Templates for JavaScript -->
+    <template id="ingredients-template">
+        <div class="grid grid-cols-12 gap-2">
+            {{ form.ingredient_formset.empty_form.id }}
+            <div class="col-span-3">
+                <input type="number" step="any" name="{{ form.ingredient_formset.empty_form.quantity.html_name }}" placeholder="Menge" class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 bg-gray-50 border-0">
+            </div>
+            <div class="col-span-3">
+                <input type="text" name="{{ form.ingredient_formset.empty_form.unit.html_name }}" placeholder="Einh." class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 bg-gray-50 border-0">
+            </div>
+            <div class="col-span-6">
+                <input type="text" name="{{ form.ingredient_formset.empty_form.name.html_name }}" placeholder="Zutat" class="w-full border-gray-100 rounded-lg px-2 py-1.5 text-xs focus:ring-2 focus:ring-indigo-100 font-medium bg-gray-50 border-0">
+            </div>
+        </div>
+    </template>
+
+    <template id="instructions-template">
+        <div class="relative pl-10 group">
+            {{ form.instruction_formset.empty_form.id }}
+            <div class="absolute left-0 top-0 w-7 h-7 bg-gray-50 rounded-full flex items-center justify-center font-bold text-black group-focus-within:bg-indigo-600 group-focus-within:text-white transition-all">
+                <input type="number" name="{{ form.instruction_formset.empty_form.step_number.html_name }}" class="step-number-input hidden">
+                <span class="step-number-display text-[10px]">#</span>
+            </div>
+            <textarea name="{{ form.instruction_formset.empty_form.description.html_name }}" rows="3" placeholder="Schritt beschreiben..." class="w-full border-gray-100 focus:ring-4 focus:ring-indigo-50/50 rounded-xl p-3 text-sm text-gray-700 shadow-sm transition-all resize-none bg-gray-50 border-0"></textarea>
+        </div>
+    </template>
+
+    <script>
+    
+        if (!window.addForm) {
+            window.addForm = function(prefix) {
+                const totalFormsInput = document.getElementById(`id_${prefix}-TOTAL_FORMS`);
+                const currentCount = parseInt(totalFormsInput.value);
+
+                const container = document.getElementById(`${prefix}-container`);
+                const template = document.getElementById(`${prefix}-template`);
+
+                let newHtml = template.innerHTML.replace(/__prefix__/g, currentCount);
+
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = newHtml;
+                const newRow = tempDiv.firstElementChild;
+
+                if (prefix === 'instructions') {
+                    const stepInput = newRow.querySelector('.step-number-input');
+                    if (stepInput) {
+                        stepInput.value = currentCount + 1;
+                    }
+                    const stepDisplay = newRow.querySelector('.step-number-display');
+                    if (stepDisplay) {
+                        stepDisplay.textContent = currentCount + 1;
+                    }
+                }
+
+                container.appendChild(newRow);
+                totalFormsInput.value = currentCount + 1;
+            };
+        }
+    </script>
+</div>
